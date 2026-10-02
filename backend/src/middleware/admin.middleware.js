@@ -1,9 +1,10 @@
 import { ApiError } from "../../utils/ApiError";
 
+
+//adminMiddleware ka kaam sirf admin role verify karna hai
+// or jab router banega too authmiddle are see token check karega then adminmiddleware see role
 export const adminMiddleware = (req, res, next) => {
      
-
-    // or jab router banega too authmiddle are see token check karega then adminmiddleware see role
     try{
 
         if(!req.user){
@@ -13,9 +14,6 @@ export const adminMiddleware = (req, res, next) => {
             )
 
         }
-
-
-
 
         if( req.user.role !== "admin" ){
             throw new ApiError(
@@ -36,3 +34,4 @@ export const adminMiddleware = (req, res, next) => {
             );
     }
 };
+
