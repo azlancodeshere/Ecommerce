@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParse from "cookie-parser";
 
 import connectDB from "./db/db.js";
 import userRoutes from "./src/routes/User.route.js"
+import "dotenv/config";
 
 dotenv.config();
 
@@ -29,6 +31,8 @@ app.get("/", (req, res) => {
 });
 
 
+app.use("/api/users", userRoutes);
+
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -38,7 +42,7 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.use("/api/users", userRoutes);
+
 
 
 connectDB();

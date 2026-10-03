@@ -1,5 +1,6 @@
 import {Routes, Route} from "react-router-dom"
 import RegisterPage from "./Pages/RegisterPage.jsx"
+import HomePage from "./Home/HomePage.jsx"
 
 import './App.css'
 
@@ -10,6 +11,7 @@ function App() {
     <Routes>
 
       <Route path="/register"  element={<RegisterPage />} />
+      <Route path="/home"  element={<HomePage />} />
      
      
     </Routes>

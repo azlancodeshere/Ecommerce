@@ -6,6 +6,9 @@ export const authMiddleware = async (req, res, next) => {
 
     try {
 
+        console.log("Cookies:", req.cookies);
+console.log("Access Token:", req.cookies?.accessToken);
+
         const token =
             req.cookies?.accessToken ||
             req.headers.authorization?.replace("Bearer ", "");
