@@ -33,37 +33,33 @@ const LoginPage = () => {
     };
 
 
-    const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        e.preventDefault();
+    try {
+        const response = await api.post("/users/login", formData);
 
-        try {
+        console.log("Login successful:", response.data);
 
-            const response = await api.post("/users/login", formData);
+        const loggedInUser = response.data.data.user;
 
-            console.log("Login successful:", response.data);
+        console.log("LOGGED IN USER:", loggedInUser);
+        console.log("ROLE:", loggedInUser.role);
 
-            const loggedInUser = response.data.data;    
+        setUser(loggedInUser);
+        setIsAuthenticated(true);
 
-            setUser(loggedInUser);
-
-            setIsAuthenticated(true);
-
-            if (loggedInUser.role === "admin") {
-                navigate("/admin", { replace: true });
-            } else {
-                navigate("/home", { replace: true });
-            }
-
-        } catch (error) {
-
-            console.error("Login error:", error);
-
-            setIsAuthenticated(false);
-
+        if (loggedInUser.role === "admin") {
+            navigate("/admin", { replace: true });
+        } else {
+            navigate("/home", { replace: true });
         }
-    };
 
+    } catch (error) {
+        console.error("Login error:", error);
+        setIsAuthenticated(false);
+    }
+};
 
     return (
 

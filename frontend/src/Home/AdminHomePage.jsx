@@ -9,8 +9,8 @@ import {
   FiPlus,
   FiSettings,
   FiLogOut,
-  FiSearch,
-  FiBell,
+  
+ 
   FiMoreVertical,
   FiArrowUpRight,
   FiArrowDownRight,
@@ -23,6 +23,9 @@ import {
   FiTrash2,
   FiEye,
 } from "react-icons/fi";
+
+
+import AdminNavbar from "../Components/Navbar/AdminNavbar";
 
 const AdminHomePage = () => {
   const stats = [
@@ -287,52 +290,13 @@ const AdminHomePage = () => {
       ====================================================== */}
       <main className="lg:ml-64">
 
-        {/* Header */}
-        <header className="h-20 bg-white border-b border-gray-100 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-40">
+      
+        <AdminNavbar/>
 
-          <div>
-            <p className="text-xs text-gray-400">
-              Welcome back,
-            </p>
 
-            <h2 className="text-xl sm:text-2xl font-black">
-              Admin Dashboard
-            </h2>
-          </div>
 
-          <div className="flex items-center gap-3">
 
-            {/* Search */}
-            <div className="hidden md:flex relative">
-
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-52 lg:w-64 pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-rose-300 focus:bg-white transition"
-              />
-
-            </div>
-
-            {/* Notification */}
-            <button className="relative w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 hover:text-rose-500 transition">
-
-              <FiBell />
-
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full" />
-
-            </button>
-
-            {/* Mobile Profile */}
-            <div className="lg:hidden w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 to-orange-400 text-white flex items-center justify-center font-bold">
-              A
-            </div>
-
-          </div>
-
-        </header>
-
+        
         {/* Content */}
         <div className="p-4 sm:p-6 lg:p-8">
 

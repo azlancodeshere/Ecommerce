@@ -25,7 +25,7 @@ function AuthProvider({children}){
     const getCurrentUser = async () =>{
         try{
             const response = await api.get("/users/current-user");
-            setUser(response.data.user);
+            setUser(response.data.data);
             setIsAuthenticated(true);   
 
 
