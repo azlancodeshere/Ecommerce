@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 
 import {
     FiMoreVertical,
@@ -23,6 +24,9 @@ import AdminSideBar from "../Components/sidebar/AdminSideBar";
 
 
 const AdminHomePage = () => {
+
+
+  const navigate = useNavigate();
 
     // =========================
     // STATS
@@ -243,6 +247,9 @@ const AdminHomePage = () => {
 
 
                             <button
+                            onClick={() =>
+                              navigate("/add-product")
+                            }
                                 className="
                                     px-4
                                     py-2.5

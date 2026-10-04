@@ -1,4 +1,4 @@
-import { ApiError } from "../../utils/ApiError";
+import { ApiError } from "../../utils/ApiError.js";
 
 
 //adminMiddleware ka kaam sirf admin role verify karna hai
@@ -21,6 +21,9 @@ export const adminMiddleware = (req, res, next) => {
                 "Access denied. Admins only"
             )       
         }
+
+
+        next()
 
     }catch(error){
 
