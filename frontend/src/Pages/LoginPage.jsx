@@ -43,13 +43,17 @@ const LoginPage = () => {
 
             console.log("Login successful:", response.data);
 
-            setUser(response.data.data);
+            const loggedInUser = response.data.data;    
+
+            setUser(loggedInUser);
 
             setIsAuthenticated(true);
 
-            navigate("/home", {
-                replace: true
-            });
+            if (loggedInUser.role === "admin") {
+                navigate("/admin", { replace: true });
+            } else {
+                navigate("/home", { replace: true });
+            }
 
         } catch (error) {
 
@@ -66,17 +70,17 @@ const LoginPage = () => {
         <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-orange-50 flex items-center justify-center px-4 py-8 md:py-12">
 
 
-          
+
 
             <div className="w-full max-w-6xl bg-white rounded-[28px] shadow-[0_20px_60px_rgba(0,0,0,0.10)] overflow-hidden flex flex-col lg:flex-row">
 
 
-               
+
 
                 <div className="hidden lg:flex lg:w-[48%] relative overflow-hidden bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400 text-white p-10 xl:p-14 flex-col justify-between">
 
 
-                    
+
 
                     <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/10" />
 
@@ -88,7 +92,7 @@ const LoginPage = () => {
                     <div className="relative z-10">
 
 
-                      
+
 
                         <div className="flex items-center gap-3 mb-16">
 
@@ -118,7 +122,7 @@ const LoginPage = () => {
                         </div>
 
 
-                     
+
 
                         <div>
 
@@ -152,12 +156,12 @@ const LoginPage = () => {
                         </div>
 
 
-                       
+
 
                         <div className="mt-12 space-y-5">
 
 
-                           
+
 
                             <div className="flex items-center gap-4">
 
@@ -183,7 +187,7 @@ const LoginPage = () => {
                             </div>
 
 
-                           
+
 
                             <div className="flex items-center gap-4">
 
@@ -209,7 +213,7 @@ const LoginPage = () => {
                             </div>
 
 
-                           
+
 
                             <div className="flex items-center gap-4">
 
@@ -240,7 +244,7 @@ const LoginPage = () => {
                     </div>
 
 
-                   
+
 
                     <div className="relative z-10 mt-10">
 
@@ -271,12 +275,12 @@ const LoginPage = () => {
                 </div>
 
 
-                
+
 
                 <div className="w-full lg:w-[52%] px-6 py-8 sm:px-10 md:px-14 lg:px-12 xl:px-16 flex flex-col justify-center">
 
 
-                    
+
 
                     <div className="lg:hidden flex items-center justify-center gap-2 mb-10">
 
@@ -298,7 +302,7 @@ const LoginPage = () => {
                     </div>
 
 
-                    
+
 
                     <div className="mb-9">
 
@@ -325,7 +329,7 @@ const LoginPage = () => {
                     </div>
 
 
-                  
+
 
                     <form
                         onSubmit={handleSubmit}
@@ -333,7 +337,7 @@ const LoginPage = () => {
                     >
 
 
-                       
+
 
                         <div>
 
@@ -379,7 +383,7 @@ const LoginPage = () => {
                         </div>
 
 
-                      
+
 
                         <div className="flex justify-end">
 
@@ -393,7 +397,7 @@ const LoginPage = () => {
                         </div>
 
 
-                       
+
 
                         <button
                             type="submit"
@@ -410,7 +414,7 @@ const LoginPage = () => {
                     </form>
 
 
-                  
+
 
                     <div className="relative flex items-center my-8">
 
@@ -427,7 +431,7 @@ const LoginPage = () => {
                     </div>
 
 
-                    
+
 
                     <p className="text-center text-gray-500 text-sm">
 

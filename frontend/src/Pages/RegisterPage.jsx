@@ -3,6 +3,8 @@ import api from "../api/api.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
 
+
+
 import {
   FiShoppingBag,
   FiGift,
@@ -13,6 +15,8 @@ import {
   FiPackage,
   FiArrowRight,
 } from "react-icons/fi";
+
+
 
 function RegisterPage() {
   const [role, setRole] = useState("user");
@@ -37,38 +41,50 @@ function RegisterPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Password does not match with confirm password");
-      return;
-    }
+  if (formData.password !== formData.confirmPassword) {
+    alert("Password does not match with confirm password");
+    return;
+  }
 
-    try {
-      console.log("REGISTER API CALL STARTED");
+  try {
+    console.log("REGISTER API CALL STARTED");
 
-      const response = await api.post("/users/register", {
-        ...formData,
-        role,
+    const response = await api.post("/users/register", {
+      ...formData,
+      role,
+    });
+
+    console.log(response.data);
+
+    const registerUser = response.data.data;
+
+    setUser(registerUser);
+    setIsAuthenticated(true);
+
+    if (registerUser.role === "admin") {
+      navigate("/admin", {
+        replace: true,
       });
-
-      console.log(response.data);
-
-      setUser(response.data.data);
-      setIsAuthenticated(true);
-
+    } else {
       navigate("/home", {
         replace: true,
       });
-    } catch (error) {
-      console.error("Error during registration:", error);
-
-      alert(
-        error.response?.data?.message ||
-          "Registration failed. Please try again."
-      );
     }
-  };
+
+  } catch (error) {
+    console.error("Error during registration:", error);
+
+    alert(
+      error.response?.data?.message ||
+        "Registration failed. Please try again."
+    );
+  }
+};
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-orange-50 flex items-center justify-center px-4 py-8 md:py-12">
