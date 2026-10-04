@@ -5,11 +5,15 @@ import cookieParse from "cookie-parser";
 
 import connectDB from "./db/db.js";
 import userRoutes from "./src/routes/User.route.js"
-import "dotenv/config";
+import productRoute from "./src/routes/product.route.js"
+
+
 
 dotenv.config();
 
+
 const app = express();
+
 
 // Middleware
 app.use(cors(
@@ -31,7 +35,12 @@ app.get("/", (req, res) => {
 });
 
 
+
 app.use("/api/users", userRoutes);
+app.use("/api/products", productRoute);
+
+
+
 
 app.use((req, res) => {
     res.status(404).json({
