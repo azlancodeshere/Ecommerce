@@ -226,6 +226,52 @@ const AdminHomePage = () => {
                         STATS
                     ================================== */}
 
+
+                    <div className="p-6 flex items-center justify-between bg-red-400">
+
+                            <div>
+
+                                <p className="text-sm text-gray-700">
+                                    Inventory
+                                </p>
+
+                                <h3 className="text-xl font-black mt-1">
+                                    Products
+                                </h3>
+
+                            </div>
+
+
+                            <button
+                                className="
+                                    px-4
+                                    py-2.5
+                                    rounded-xl
+                                    bg-gradient-to-r
+                                    from-rose-500
+                                    to-orange-400
+                                    text-white
+                                    text-sm
+                                    font-bold
+                                    flex
+                                    items-center
+                                    gap-2
+                                    shadow-lg
+                                    shadow-rose-100
+                                    hover:shadow-xl
+                                    transition
+                                "
+                            >
+
+                                <FiPlus />
+
+                                Add Product
+
+                            </button>
+
+                        </div>
+
+
                     <section>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
@@ -813,7 +859,7 @@ const AdminHomePage = () => {
 
                         {/* Header */}
 
-                        <div className="p-6 flex items-center justify-between">
+                        {/* <div className="p-6 flex items-center justify-between">
 
                             <div>
 
@@ -855,7 +901,7 @@ const AdminHomePage = () => {
 
                             </button>
 
-                        </div>
+                        </div> */}
 
 
                         {/* Products Table */}

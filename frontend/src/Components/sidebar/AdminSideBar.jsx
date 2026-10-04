@@ -1,337 +1,804 @@
-import React, { useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useContext, useState } from "react";
+
+import { useNavigate } from "react-router-dom";
 
 import {
-  FiGrid,
-  FiPackage,
-  FiShoppingCart,
-  FiUsers,
-  FiTag,
-  FiPlus,
-  FiSettings,
-  FiLogOut,
+    FiMenu,
+    FiX,
+    FiGrid,
+    FiPackage,
+    FiShoppingCart,
+    FiUsers,
+    FiTag,
+    FiPlus,
+    FiSettings,
+    FiLogOut,
+    FiShoppingBag,
 } from "react-icons/fi";
 
 import { AuthContext } from "../../context/AuthContext";
 
-
-
 const AdminSideBar = () => {
 
-  const { user, isAuthenticated, logout } = useContext(AuthContext)
+    const { user, isAuthenticated, logout } = useContext(AuthContext);
 
-  const navigate = useNavigate()
+    const navigate = useNavigate();
 
-
-
-  return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-100 flex flex-col z-50">
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
-      <div className="flex-1 px-4 py-8 overflow-y-auto">
+    const closeSidebar = () => {
+        setSidebarOpen(false);
+    };
 
 
-        <div>
+    const handleLogout = async () => {
 
-          <p className="px-5 mb-5 text-xs font-bold text-gray-400 uppercase tracking-[4px]">
-            Main Menu
-          </p>
+        try {
 
-          <nav className="space-y-1">
+            await logout();
+
+        } finally {
+
+            navigate("/login", {
+                replace: true
+            });
+
+        }
+
+    };
 
 
-            <button
-              className="
-                                w-full
-                                flex
-                                items-center
-                                gap-4
-                                px-5
-                                py-3.5
-                                rounded-2xl
-                                bg-gradient-to-r
+    return (
+        <>
+
+            {/* ========================================= */}
+            {/* MOBILE MENU BUTTON */}
+            {/* ========================================= */}
+
+            {!sidebarOpen && (
+                <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="
+                        fixed
+                        top-4
+                        left-4
+                        z-[50]
+
+                        lg:hidden
+
+                        w-11
+                        h-11
+
+                        rounded-xl
+
+                        bg-white
+
+                        border
+                        border-gray-200
+
+                        shadow-lg
+
+                        flex
+                        items-center
+                        justify-center
+
+                        text-gray-700
+
+                        hover:bg-gray-50
+
+                        transition
+                    "
+                >
+                    <FiMenu size={23} />
+                </button>
+            )}
+
+
+            {/* ========================================= */}
+            {/* MOBILE OVERLAY */}
+            {/* ========================================= */}
+
+            {sidebarOpen && (
+                <div
+                    onClick={closeSidebar}
+                    className="
+                        fixed
+                        inset-0
+
+                        bg-black/40
+
+                        z-[60]
+
+                        lg:hidden
+                    "
+                />
+            )}
+
+
+            {/* ========================================= */}
+            {/* SIDEBAR */}
+            {/* ========================================= */}
+
+            <aside
+                className={`
+                    fixed
+                    left-0
+                    top-0
+                    bottom-0
+
+                    w-72
+                    sm:w-80
+                    lg:w-64
+
+                    bg-white
+
+                    border-r
+                    border-gray-100
+
+                    flex
+                    flex-col
+
+                    z-[70]
+
+                    shadow-2xl
+                    lg:shadow-none
+
+                    transform
+                    transition-transform
+                    duration-300
+                    ease-in-out
+
+                    ${
+                        sidebarOpen
+                            ? "translate-x-0"
+                            : "-translate-x-full"
+                    }
+
+                    lg:translate-x-0
+                `}
+            >
+
+
+                {/* ========================================= */}
+                {/* LOGO */}
+                {/* ========================================= */}
+
+                <div
+                    className="
+                        h-20
+                        px-5
+
+                        flex
+                        items-center
+                        justify-between
+
+                        border-b
+                        border-gray-100
+
+                        shrink-0
+                    "
+                >
+
+                    <div className="flex items-center gap-3">
+
+                        {/* LOGO ICON */}
+
+                        <div
+                            className="
+                                w-10
+                                h-10
+
+                                rounded-xl
+
+                                bg-gradient-to-br
                                 from-rose-500
                                 to-orange-400
+
+                                flex
+                                items-center
+                                justify-center
+
                                 text-white
-                                font-semibold
-                                text-base
-                                shadow-lg
+
+                                shadow-md
                                 shadow-rose-100
-                                whitespace-nowrap
+
+                                shrink-0
                             "
-            >
-              <FiGrid
-                size={24}
-                className="shrink-0"
-              />
-
-              <span>
-                Dashboard
-              </span>
-            </button>
+                        >
+                            <FiShoppingBag size={20} />
+                        </div>
 
 
+                        {/* LOGO TEXT */}
 
-            <button
-              className="
-                                w-full
-                                flex
-                                items-center
-                                gap-4
-                                px-5
-                                py-3.5
-                                rounded-2xl
-                                text-gray-500
-                                hover:bg-rose-50
-                                hover:text-rose-500
-                                transition
-                                text-base
-                                whitespace-nowrap
-                            "
-            >
-              <FiPackage
-                size={24}
-                className="shrink-0"
-              />
+                        <div>
 
-              <span>
-                Products
-              </span>
-            </button>
+                            <h1
+                                className="
+                                    text-lg
+                                    font-extrabold
+                                    text-gray-900
+                                    leading-tight
+                                "
+                            >
+                                Shop
+                                <span className="text-rose-500">
+                                    Cart
+                                </span>
+                            </h1>
 
 
+                            <p
+                                className="
+                                    text-[9px]
+                                    text-gray-400
+                                    uppercase
+                                    tracking-[2px]
+                                    mt-0.5
+                                "
+                            >
+                                Admin Panel
+                            </p>
 
-            <button
-              className="
-                                w-full
-                                flex
-                                items-center
-                                gap-4
-                                px-5
-                                py-3.5
-                                rounded-2xl
-                                text-gray-500
-                                hover:bg-rose-50
-                                hover:text-rose-500
-                                transition
-                                text-base
-                                whitespace-nowrap
-                            "
-            >
-              <FiShoppingCart
-                size={24}
-                className="shrink-0"
-              />
+                        </div>
 
-              <span>
-                Orders
-              </span>
-            </button>
+                    </div>
 
 
-            <button
-              className="
-                                w-full
-                                flex
-                                items-center
-                                gap-4
-                                px-5
-                                py-3.5
-                                rounded-2xl
-                                text-gray-500
-                                hover:bg-rose-50
-                                hover:text-rose-500
-                                transition
-                                text-base
-                                whitespace-nowrap
-                            "
-            >
-              <FiUsers
-                size={24}
-                className="shrink-0"
-              />
+                    {/* MOBILE CLOSE BUTTON */}
 
-              <span>
-                Customers
-              </span>
-            </button>
+                    <button
+                        onClick={closeSidebar}
+                        className="
+                            lg:hidden
 
+                            w-9
+                            h-9
 
+                            rounded-lg
 
-            <button
-              className="
-                                w-full
-                                flex
-                                items-center
-                                gap-4
-                                px-5
-                                py-3.5
-                                rounded-2xl
-                                text-gray-500
-                                hover:bg-rose-50
-                                hover:text-rose-500
-                                transition
-                                text-base
-                                whitespace-nowrap
-                            "
-            >
-              <FiTag
-                size={24}
-                className="shrink-0"
-              />
-
-              <span>
-                Categories
-              </span>
-            </button>
-
-          </nav>
-
-        </div>
-
-
-
-        <div className="mt-10">
-
-          <p className="px-5 mb-5 text-xs font-bold text-gray-400 uppercase tracking-[4px]">
-            Management
-          </p>
-
-          <nav className="space-y-1">
-
-
-            <button
-              className="
-                                w-full
-                                flex
-                                items-center
-                                gap-4
-                                px-5
-                                py-3.5
-                                rounded-2xl
-                                text-gray-500
-                                hover:bg-rose-50
-                                hover:text-rose-500
-                                transition
-                                text-base
-                                whitespace-nowrap
-                            "
-            >
-              <FiPlus
-                size={24}
-                className="shrink-0"
-              />
-
-              <span>
-                Add Product
-              </span>
-            </button>
-
-
-
-            <button
-              className="
-                                w-full
-                                flex
-                                items-center
-                                gap-4
-                                px-5
-                                py-3.5
-                                rounded-2xl
-                                text-gray-500
-                                hover:bg-rose-50
-                                hover:text-rose-500
-                                transition
-                                text-base
-                                whitespace-nowrap
-                            "
-            >
-              <FiSettings
-                size={24}
-                className="shrink-0"
-              />
-
-              <span>
-                Settings
-              </span>
-            </button>
-
-          </nav>
-
-        </div>
-
-      </div>
-
-
-      <div className="p-4 border-t border-gray-100">
-
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50">
-
-
-          <div
-            className="
-                            w-11
-                            h-11
-                            shrink-0
-                            rounded-full
-                            bg-gradient-to-br
-                            from-rose-500
-                            to-orange-400
                             flex
                             items-center
                             justify-center
-                            text-white
-                            text-lg
-                            font-bold
-                        "
-          >
-            {isAuthenticated &&
-              user?.username?.charAt(0)?.toUpperCase()
-            }
 
-
-          </div>
-
-
-
-          <div className="flex-1 min-w-0">
-
-            <p className="font-bold text-sm text-gray-900 truncate">
-              Admin
-            </p>
-
-            <p className="text-xs text-gray-400 truncate">
-              {isAuthenticated &&
-                user?.email}
-            </p>
-
-          </div>
-
-
-
-          <button
-            onClick={async () => {
-              await logout();
-              navigate("/login", {
-                replace: true
-              })
-            }}
-            className="
-                            shrink-0
                             text-gray-400
-                            hover:text-red-500
+
+                            hover:bg-gray-100
+                            hover:text-gray-700
+
                             transition
                         "
-          >
-            <FiLogOut size={21} />
-          </button>
+                    >
+                        <FiX size={21} />
+                    </button>
 
-        </div>
+                </div>
 
-      </div>
 
-    </aside>
-  );
+                {/* ========================================= */}
+                {/* MENU AREA */}
+                {/* ========================================= */}
+
+                <div
+                    className="
+                        flex-1
+
+                        px-4
+                        py-8
+
+                        overflow-y-auto
+
+                        overscroll-contain
+                    "
+                >
+
+
+                    {/* ========================================= */}
+                    {/* MAIN MENU */}
+                    {/* ========================================= */}
+
+                    <div>
+
+                        <p
+                            className="
+                                px-5
+                                mb-5
+
+                                text-xs
+                                font-bold
+
+                                text-gray-400
+
+                                uppercase
+
+                                tracking-[4px]
+                            "
+                        >
+                            Main Menu
+                        </p>
+
+
+                        <nav className="space-y-1">
+
+
+                            {/* DASHBOARD */}
+
+                            <button
+                                onClick={closeSidebar}
+                                className="
+                                    w-full
+
+                                    flex
+                                    items-center
+
+                                    gap-4
+
+                                    px-5
+                                    py-3.5
+
+                                    rounded-2xl
+
+                                    bg-gradient-to-r
+                                    from-rose-500
+                                    to-orange-400
+
+                                    text-white
+
+                                    font-semibold
+
+                                    text-base
+
+                                    shadow-lg
+                                    shadow-rose-100
+
+                                    whitespace-nowrap
+
+                                    transition
+
+                                    active:scale-[0.98]
+                                "
+                            >
+
+                                <FiGrid
+                                    size={24}
+                                    className="shrink-0"
+                                />
+
+                                <span>
+                                    Dashboard
+                                </span>
+
+                            </button>
+
+
+                            {/* PRODUCTS */}
+
+                            <button
+                                onClick={closeSidebar}
+                                className="
+                                    w-full
+
+                                    flex
+                                    items-center
+
+                                    gap-4
+
+                                    px-5
+                                    py-3.5
+
+                                    rounded-2xl
+
+                                    text-gray-500
+
+                                    hover:bg-rose-50
+                                    hover:text-rose-500
+
+                                    transition
+
+                                    text-base
+
+                                    whitespace-nowrap
+                                "
+                            >
+
+                                <FiPackage
+                                    size={24}
+                                    className="shrink-0"
+                                />
+
+                                <span>
+                                    Products
+                                </span>
+
+                            </button>
+
+
+                            {/* ORDERS */}
+
+                            <button
+                                onClick={closeSidebar}
+                                className="
+                                    w-full
+
+                                    flex
+                                    items-center
+
+                                    gap-4
+
+                                    px-5
+                                    py-3.5
+
+                                    rounded-2xl
+
+                                    text-gray-500
+
+                                    hover:bg-rose-50
+                                    hover:text-rose-500
+
+                                    transition
+
+                                    text-base
+
+                                    whitespace-nowrap
+                                "
+                            >
+
+                                <FiShoppingCart
+                                    size={24}
+                                    className="shrink-0"
+                                />
+
+                                <span>
+                                    Orders
+                                </span>
+
+                            </button>
+
+
+                            {/* CUSTOMERS */}
+
+                            <button
+                                onClick={closeSidebar}
+                                className="
+                                    w-full
+
+                                    flex
+                                    items-center
+
+                                    gap-4
+
+                                    px-5
+                                    py-3.5
+
+                                    rounded-2xl
+
+                                    text-gray-500
+
+                                    hover:bg-rose-50
+                                    hover:text-rose-500
+
+                                    transition
+
+                                    text-base
+
+                                    whitespace-nowrap
+                                "
+                            >
+
+                                <FiUsers
+                                    size={24}
+                                    className="shrink-0"
+                                />
+
+                                <span>
+                                    Customers
+                                </span>
+
+                            </button>
+
+
+                            {/* CATEGORIES */}
+
+                            <button
+                                onClick={closeSidebar}
+                                className="
+                                    w-full
+
+                                    flex
+                                    items-center
+
+                                    gap-4
+
+                                    px-5
+                                    py-3.5
+
+                                    rounded-2xl
+
+                                    text-gray-500
+
+                                    hover:bg-rose-50
+                                    hover:text-rose-500
+
+                                    transition
+
+                                    text-base
+
+                                    whitespace-nowrap
+                                "
+                            >
+
+                                <FiTag
+                                    size={24}
+                                    className="shrink-0"
+                                />
+
+                                <span>
+                                    Categories
+                                </span>
+
+                            </button>
+
+                        </nav>
+
+                    </div>
+
+
+                    {/* ========================================= */}
+                    {/* MANAGEMENT */}
+                    {/* ========================================= */}
+
+                    <div className="mt-10">
+
+                        <p
+                            className="
+                                px-5
+                                mb-5
+
+                                text-xs
+                                font-bold
+
+                                text-gray-400
+
+                                uppercase
+
+                                tracking-[4px]
+                            "
+                        >
+                            Management
+                        </p>
+
+
+                        <nav className="space-y-1">
+
+
+                            {/* ADD PRODUCT */}
+
+                            <button
+                                onClick={closeSidebar}
+                                className="
+                                    w-full
+
+                                    flex
+                                    items-center
+
+                                    gap-4
+
+                                    px-5
+                                    py-3.5
+
+                                    rounded-2xl
+
+                                    text-gray-500
+
+                                    hover:bg-rose-50
+                                    hover:text-rose-500
+
+                                    transition
+
+                                    text-base
+
+                                    whitespace-nowrap
+                                "
+                            >
+
+                                <FiPlus
+                                    size={24}
+                                    className="shrink-0"
+                                />
+
+                                <span>
+                                    Add Product
+                                </span>
+
+                            </button>
+
+
+                            {/* SETTINGS */}
+
+                            <button
+                                onClick={closeSidebar}
+                                className="
+                                    w-full
+
+                                    flex
+                                    items-center
+
+                                    gap-4
+
+                                    px-5
+                                    py-3.5
+
+                                    rounded-2xl
+
+                                    text-gray-500
+
+                                    hover:bg-rose-50
+                                    hover:text-rose-500
+
+                                    transition
+
+                                    text-base
+
+                                    whitespace-nowrap
+                                "
+                            >
+
+                                <FiSettings
+                                    size={24}
+                                    className="shrink-0"
+                                />
+
+                                <span>
+                                    Settings
+                                </span>
+
+                            </button>
+
+                        </nav>
+
+                    </div>
+
+                </div>
+
+
+                {/* ========================================= */}
+                {/* ADMIN PROFILE */}
+                {/* ========================================= */}
+
+                <div
+                    className="
+                        p-4
+
+                        border-t
+                        border-gray-100
+
+                        shrink-0
+                    "
+                >
+
+                    <div
+                        className="
+                            flex
+                            items-center
+
+                            gap-3
+
+                            p-3
+
+                            rounded-2xl
+
+                            bg-gray-50
+                        "
+                    >
+
+
+                        {/* PROFILE IMAGE / INITIAL */}
+
+                        <div
+                            className="
+                                w-11
+                                h-11
+
+                                shrink-0
+
+                                rounded-full
+
+                                bg-gradient-to-br
+                                from-rose-500
+                                to-orange-400
+
+                                flex
+                                items-center
+                                justify-center
+
+                                text-white
+
+                                text-lg
+                                font-bold
+                            "
+                        >
+                            {isAuthenticated &&
+                                user?.username
+                                    ?.charAt(0)
+                                    ?.toUpperCase()
+                            }
+                        </div>
+
+
+                        {/* USER INFO */}
+
+                        <div
+                            className="
+                                flex-1
+                                min-w-0
+                            "
+                        >
+
+                            <p
+                                className="
+                                    font-bold
+                                    text-sm
+                                    text-gray-900
+                                    truncate
+                                "
+                            >
+                                {user?.username || "Admin"}
+                            </p>
+
+
+                            <p
+                                className="
+                                    text-xs
+                                    text-gray-400
+                                    truncate
+                                "
+                            >
+                                {isAuthenticated &&
+                                    user?.email
+                                }
+                            </p>
+
+                        </div>
+
+
+                        {/* LOGOUT */}
+
+                        <button
+                            onClick={handleLogout}
+                            className="
+                                shrink-0
+
+                                w-9
+                                h-9
+
+                                rounded-lg
+
+                                flex
+                                items-center
+                                justify-center
+
+                                text-gray-400
+
+                                hover:bg-red-50
+                                hover:text-red-500
+
+                                transition
+                            "
+                        >
+                            <FiLogOut size={21} />
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </aside>
+
+        </>
+    );
 };
+
 
 export default AdminSideBar;
