@@ -40,7 +40,10 @@ const createProduct = async (req,res) =>{
                     "product name or Sku is already exists"
                 )
                }
-
+        
+               const imageUrls = files.map(
+                (file) =>`uploads/products/${file.filename}`
+               )
 
                const product = await Product.create({
                 productname,
