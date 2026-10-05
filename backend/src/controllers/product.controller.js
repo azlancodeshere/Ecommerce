@@ -53,7 +53,7 @@ const createProduct = async (req,res) =>{
                 category,
                 sku,
                 lowStockThreshold,
-                images:imagesUrls,
+                images:imageUrls,
                 admin:req.user._id
                });
 

@@ -1,15 +1,12 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 
+const MAX_IMAGES = 5;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 const AddProduct = () => {
-
-    const [showImagePicker, setShowImagePicker] = useState(false);
-
-    const [imageUrl, setImageUrl] = useState("");
-    
-
-
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         productname: "",
@@ -22,90 +19,181 @@ const AddProduct = () => {
         images: []
     });
 
-    const navigate = useNavigate();
+    const [imagePreviews, setImagePreviews] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-
+    // -----------------------------
+    // Normal input handler
+    // -----------------------------
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
+        const { name, value } = e.target;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    // -----------------------------
+    // Image selection
+    // -----------------------------
+    const handleImageChange = (e) => {
+        const selectedFiles = Array.from(e.target.files || []);
+
+        if (selectedFiles.length === 0) {
+            return;
+        }
+
+        // Check total image limit
+        const remainingSlots = MAX_IMAGES - formData.images.length;
+
+        if (remainingSlots <= 0) {
+            alert(`You can upload maximum ${MAX_IMAGES} images.`);
+            e.target.value = "";
+            return;
+        }
+
+        const filesToAdd = selectedFiles.slice(0, remainingSlots);
+
+        // Validate files
+        for (const file of filesToAdd) {
+            if (!file.type.startsWith("image/")) {
+                alert(`${file.name} is not a valid image.`);
+                e.target.value = "";
+                return;
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+                alert(`${file.name} is larger than 5MB.`);
+                e.target.value = "";
+                return;
+            }
+        }
+
+        // Add files
+        setFormData((prev) => ({
+            ...prev,
+            images: [...prev.images, ...filesToAdd]
+        }));
+
+        // Create previews
+        const newPreviews = filesToAdd.map((file) => ({
+            file,
+            url: URL.createObjectURL(file)
+        }));
+
+        setImagePreviews((prev) => [
+            ...prev,
+            ...newPreviews
+        ]);
+
+        // Reset input
+        e.target.value = "";
+    };
+
+    // -----------------------------
+    // Remove image
+    // -----------------------------
+    const handleRemoveImage = (index) => {
+        setImagePreviews((prev) => {
+            const removedPreview = prev[index];
+
+            if (removedPreview?.url) {
+                URL.revokeObjectURL(removedPreview.url);
+            }
+
+            return prev.filter((_, i) => i !== index);
         });
-    };
-
-
-    const handleAddImage = () => {
-
-        const url = imageUrl.trim();
-
-        if (!url) {
-            return;
-        }
-
-        if (formData.images.includes(url)) {
-            return;
-        }
 
         setFormData((prev) => ({
             ...prev,
-            images: [
-                ...prev.images,
-                url
-            ]
+            images: prev.images.filter((_, i) => i !== index)
         }));
-
-        setImageUrl("");
-        setShowImagePicker(false);
     };
 
+    // -----------------------------
+    // Cleanup preview URLs
+    // -----------------------------
+    useEffect(() => {
+        return () => {
+            imagePreviews.forEach((preview) => {
+                URL.revokeObjectURL(preview.url);
+            });
+        };
+    }, [imagePreviews]);
 
-    const handleRemoveImage = (imageUrl) => {
-
-        setFormData((prev) => ({
-            ...prev,
-            images: prev.images.filter(
-                (image) => image !== imageUrl
-            )
-        }));
-
-    };
-
-    
-
-
+    // -----------------------------
+    // Submit product
+    // -----------------------------
     const handleSubmit = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    try {
-        console.log("SENDING API REQUEST...");
+        if (formData.images.length === 0) {
+            alert("Please select at least one product image.");
+            return;
+        }
 
-        const response = await api.post(
-            "/products/create-product",
-            formData
-        );
+        try {
+            setIsSubmitting(true);
 
-        console.log("CREATE PRODUCT RESPONSE:", response.data);
+            const data = new FormData();
 
-        alert("Product created successfully");
+            data.append("productname", formData.productname.trim());
+            data.append("description", formData.description.trim());
+            data.append("price", formData.price);
+            data.append("quantity", formData.quantity);
+            data.append("category", formData.category);
+            data.append("sku", formData.sku.trim());
+            data.append(
+                "lowStockThreshold",
+                formData.lowStockThreshold || "10"
+            );
 
-      
+            // Important:
+            // backend => upload.array("images", 5)
+            formData.images.forEach((file) => {
+                data.append("images", file);
+            });
 
-        navigate("/admin", { replace: true });
+            console.log("Sending product data...");
+            console.log("Images:", formData.images);
 
-    } catch (error) {
-        console.error("CREATE PRODUCT ERROR:", error);
+            const response = await api.post(
+                "/products/create-product",
+                data
+            );
 
-        console.error(
-            "ERROR RESPONSE:",
-            error.response?.data
-        );
+            console.log(
+                "CREATE PRODUCT RESPONSE:",
+                response.data
+            );
 
-        alert(
-            error.response?.data?.message ||
-            "Something went wrong while creating product"
-        );
-    }
-};
-  
+            alert("Product created successfully.");
+
+            navigate("/admin", {
+                replace: true
+            });
+
+        } catch (error) {
+            console.error(
+                "CREATE PRODUCT ERROR:",
+                error
+            );
+
+            console.error(
+                "ERROR RESPONSE:",
+                error.response?.data
+            );
+
+            alert(
+                error.response?.data?.message ||
+                "Something went wrong while creating product."
+            );
+
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#fff7f8] via-[#fffaf8] to-[#fff4ef] text-slate-800">
@@ -131,7 +219,6 @@ const AddProduct = () => {
 
                     </div>
 
-
                     {/* Main Card */}
                     <div className="
                         bg-gradient-to-br
@@ -145,7 +232,6 @@ const AddProduct = () => {
                         shadow-rose-100/40
                         overflow-hidden
                     ">
-
 
                         {/* Card Header */}
                         <div className="
@@ -192,7 +278,6 @@ const AddProduct = () => {
 
                                 </div>
 
-
                                 <div>
 
                                     <h2 className="text-xl font-extrabold text-rose-950">
@@ -209,15 +294,14 @@ const AddProduct = () => {
 
                         </div>
 
-
                         {/* Form */}
-                        <form 
-                        onSubmit={handleSubmit}
-                        className="p-5 sm:p-8 lg:p-10">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="p-5 sm:p-8 lg:p-10"
+                        >
 
                             {/* Basic Information */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
 
                                 {/* Product Name */}
                                 <div>
@@ -229,9 +313,10 @@ const AddProduct = () => {
                                     <input
                                         type="text"
                                         name="productname"
-                                        onChange={handleChange}
                                         value={formData.productname}
+                                        onChange={handleChange}
                                         placeholder="Enter product name"
+                                        required
                                         className="
                                             w-full
                                             h-14
@@ -252,7 +337,6 @@ const AddProduct = () => {
                                     />
 
                                 </div>
-
 
                                 {/* SKU */}
                                 <div>
@@ -264,9 +348,10 @@ const AddProduct = () => {
                                     <input
                                         type="text"
                                         name="sku"
-                                        onChange={handleChange}
                                         value={formData.sku}
+                                        onChange={handleChange}
                                         placeholder="e.g. SHOE-001"
+                                        required
                                         className="
                                             w-full
                                             h-14
@@ -287,7 +372,6 @@ const AddProduct = () => {
                                     />
 
                                 </div>
-
 
                                 {/* Price */}
                                 <div>
@@ -312,9 +396,11 @@ const AddProduct = () => {
                                         <input
                                             type="number"
                                             name="price"
-                                            onChange={handleChange}
                                             value={formData.price}
+                                            onChange={handleChange}
                                             placeholder="0.00"
+                                            min="0"
+                                            required
                                             className="
                                                 w-full
                                                 h-14
@@ -339,7 +425,6 @@ const AddProduct = () => {
 
                                 </div>
 
-
                                 {/* Quantity */}
                                 <div>
 
@@ -350,9 +435,11 @@ const AddProduct = () => {
                                     <input
                                         type="number"
                                         name="quantity"
-                                        onChange={handleChange}
                                         value={formData.quantity}
+                                        onChange={handleChange}
                                         placeholder="Enter quantity"
+                                        min="0"
+                                        required
                                         className="
                                             w-full
                                             h-14
@@ -374,7 +461,6 @@ const AddProduct = () => {
 
                                 </div>
 
-
                                 {/* Category */}
                                 <div>
 
@@ -386,6 +472,7 @@ const AddProduct = () => {
                                         name="category"
                                         value={formData.category}
                                         onChange={handleChange}
+                                        required
                                         className="
                                             w-full
                                             h-14
@@ -424,8 +511,7 @@ const AddProduct = () => {
 
                                 </div>
 
-
-                                {/* Low Stock Threshold */}
+                                {/* Low Stock */}
                                 <div>
 
                                     <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -435,9 +521,10 @@ const AddProduct = () => {
                                     <input
                                         type="number"
                                         name="lowStockThreshold"
-                                        onChange={handleChange}
                                         value={formData.lowStockThreshold}
+                                        onChange={handleChange}
                                         placeholder="10"
+                                        min="0"
                                         className="
                                             w-full
                                             h-14
@@ -465,7 +552,6 @@ const AddProduct = () => {
 
                             </div>
 
-
                             {/* Description */}
                             <div className="mt-7">
 
@@ -475,10 +561,11 @@ const AddProduct = () => {
 
                                 <textarea
                                     rows="5"
-                                    placeholder="Enter product description..."
                                     name="description"
                                     value={formData.description}
                                     onChange={handleChange}
+                                    placeholder="Enter product description..."
+                                    required
                                     className="
                                         w-full
                                         px-5
@@ -501,7 +588,6 @@ const AddProduct = () => {
 
                             </div>
 
-
                             {/* Product Images */}
                             <div className="mt-7">
 
@@ -509,8 +595,6 @@ const AddProduct = () => {
                                     Product Images
                                 </label>
 
-
-                                {/* Upload Box */}
                                 <div className="
                                     border-2
                                     border-dashed
@@ -528,6 +612,16 @@ const AddProduct = () => {
                                     hover:shadow-rose-100
                                     transition
                                 ">
+
+                                    {/* Hidden input */}
+                                    <input
+                                        id="product-images"
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        className="hidden"
+                                        onChange={handleImageChange}
+                                    />
 
                                     <div className="
                                         w-16
@@ -559,20 +653,19 @@ const AddProduct = () => {
 
                                     </div>
 
-
                                     <p className="text-base font-extrabold text-rose-950">
                                         Add product images
                                     </p>
 
                                     <p className="text-sm text-rose-400 mt-1">
-                                        Paste an image URL from your public folder
+                                        Select up to 5 images • Maximum 5MB each
                                     </p>
 
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowImagePicker(true)}
+                                    <label
+                                        htmlFor="product-images"
                                         className="
+                                            inline-block
+                                            cursor-pointer
                                             mt-5
                                             px-6
                                             py-3
@@ -591,13 +684,12 @@ const AddProduct = () => {
                                         "
                                     >
                                         Choose Images
-                                    </button>
+                                    </label>
 
                                 </div>
 
-
                                 {/* Selected Images */}
-                                {formData.images.length > 0 && (
+                                {imagePreviews.length > 0 && (
 
                                     <div className="mt-6">
 
@@ -616,18 +708,23 @@ const AddProduct = () => {
                                                 text-xs
                                                 font-bold
                                             ">
-                                                {formData.images.length} selected
+                                                {imagePreviews.length}/{MAX_IMAGES}
                                             </span>
 
                                         </div>
 
+                                        <div className="
+                                            grid
+                                            grid-cols-2
+                                            sm:grid-cols-3
+                                            lg:grid-cols-4
+                                            gap-4
+                                        ">
 
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-
-                                            {formData.images.map((image, index) => (
+                                            {imagePreviews.map((preview, index) => (
 
                                                 <div
-                                                    key={`${image}-${index}`}
+                                                    key={`${preview.file.name}-${index}`}
                                                     className="
                                                         relative
                                                         overflow-hidden
@@ -640,7 +737,7 @@ const AddProduct = () => {
                                                 >
 
                                                     <img
-                                                        src={image}
+                                                        src={preview.url}
                                                         alt={`Product ${index + 1}`}
                                                         className="
                                                             w-full
@@ -649,27 +746,54 @@ const AddProduct = () => {
                                                         "
                                                     />
 
+                                                    <div className="
+                                                        absolute
+                                                        left-2
+                                                        bottom-2
+                                                        right-2
+                                                        flex
+                                                        items-center
+                                                        justify-between
+                                                        gap-2
+                                                    ">
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveImage(image)}
-                                                        className="
-                                                            absolute
-                                                            top-2
-                                                            right-2
-                                                            w-8
-                                                            h-8
-                                                            rounded-full
-                                                            bg-white
-                                                            text-rose-500
-                                                            font-bold
-                                                            shadow-md
-                                                            hover:bg-rose-50
-                                                            transition
-                                                        "
-                                                    >
-                                                        ×
-                                                    </button>
+                                                        <span className="
+                                                            max-w-[75%]
+                                                            truncate
+                                                            rounded-lg
+                                                            bg-white/90
+                                                            px-2
+                                                            py-1
+                                                            text-xs
+                                                            font-semibold
+                                                            text-rose-900
+                                                            backdrop-blur-sm
+                                                        ">
+                                                            {preview.file.name}
+                                                        </span>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleRemoveImage(index)
+                                                            }
+                                                            className="
+                                                                w-8
+                                                                h-8
+                                                                shrink-0
+                                                                rounded-full
+                                                                bg-white
+                                                                text-rose-500
+                                                                font-bold
+                                                                shadow-md
+                                                                hover:bg-rose-50
+                                                                transition
+                                                            "
+                                                        >
+                                                            ×
+                                                        </button>
+
+                                                    </div>
 
                                                 </div>
 
@@ -682,7 +806,6 @@ const AddProduct = () => {
                                 )}
 
                             </div>
-
 
                             {/* Bottom Buttons */}
                             <div className="
@@ -699,6 +822,7 @@ const AddProduct = () => {
 
                                 <button
                                     type="button"
+                                    onClick={() => navigate("/admin")}
                                     className="
                                         w-full
                                         sm:w-auto
@@ -717,9 +841,9 @@ const AddProduct = () => {
                                     Cancel
                                 </button>
 
-
                                 <button
                                     type="submit"
+                                    disabled={isSubmitting}
                                     className="
                                         w-full
                                         sm:w-auto
@@ -735,12 +859,16 @@ const AddProduct = () => {
                                         shadow-lg
                                         shadow-rose-200
                                         hover:shadow-xl
-                                        hover:shadow-rose-200
                                         hover:-translate-y-0.5
                                         transition
+                                        disabled:opacity-60
+                                        disabled:cursor-not-allowed
+                                        disabled:hover:translate-y-0
                                     "
                                 >
-                                    Add Product
+                                    {isSubmitting
+                                        ? "Creating Product..."
+                                        : "Add Product"}
                                 </button>
 
                             </div>
@@ -752,227 +880,6 @@ const AddProduct = () => {
                 </div>
 
             </main>
-
-
-
-
-            {/* Image URL Modal */}
-            {showImagePicker && (
-
-                <div className="
-                    fixed
-                    inset-0
-                    z-[100]
-                    flex
-                    items-center
-                    justify-center
-                    bg-rose-950/40
-                    backdrop-blur-sm
-                    px-4
-                ">
-
-                    <div className="
-                        w-full
-                        max-w-lg
-                        bg-white
-                        rounded-3xl
-                        border
-                        border-rose-100
-                        shadow-2xl
-                        overflow-hidden
-                    ">
-
-                        {/* Modal Header */}
-                        <div className="
-                            px-6
-                            py-5
-                            bg-gradient-to-r
-                            from-rose-100
-                            via-pink-50
-                            to-orange-100
-                            border-b
-                            border-rose-100
-                            flex
-                            items-center
-                            justify-between
-                            gap-4
-                        ">
-
-                            <div>
-
-                                <h2 className="text-xl font-extrabold text-rose-950">
-                                    Add Product Image
-                                </h2>
-
-                                <p className="text-sm text-rose-400 mt-1">
-                                    Enter the image URL
-                                </p>
-
-                            </div>
-
-
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowImagePicker(false);
-                                    setImageUrl("");
-                                }}
-                                className="
-                                    w-10
-                                    h-10
-                                    rounded-xl
-                                    bg-white
-                                    border
-                                    border-rose-100
-                                    text-rose-500
-                                    text-xl
-                                    font-bold
-                                    hover:bg-rose-50
-                                    transition
-                                "
-                            >
-                                ×
-                            </button>
-
-                        </div>
-
-
-                        {/* Modal Body */}
-                        <div className="p-6">
-
-                            <label className="block text-sm font-bold text-rose-950 mb-2">
-                                Image URL
-                            </label>
-
-                            <input
-                                type="text"
-                                value={imageUrl}
-                                onChange={(e) => setImageUrl(e.target.value)}
-                                placeholder="/images/shoes/nike-shoe-1.jpeg"
-                                className="
-                                    w-full
-                                    h-14
-                                    px-5
-                                    rounded-2xl
-                                    bg-rose-50/40
-                                    border
-                                    border-rose-100
-                                    text-slate-800
-                                    placeholder:text-rose-200
-                                    outline-none
-                                    focus:bg-white
-                                    focus:border-rose-400
-                                    focus:ring-4
-                                    focus:ring-rose-100
-                                    transition
-                                "
-                            />
-
-
-                            {/* Preview */}
-                            {imageUrl.trim() && (
-
-                                <div className="mt-5">
-
-                                    <p className="text-sm font-bold text-rose-950 mb-2">
-                                        Image Preview
-                                    </p>
-
-                                    <div className="
-                                        rounded-2xl
-                                        border
-                                        border-rose-100
-                                        bg-rose-50/40
-                                        overflow-hidden
-                                        p-3
-                                    ">
-
-                                        <img
-                                            src={imageUrl.trim()}
-                                            alt="Image Preview"
-                                            className="
-                                                w-full
-                                                h-56
-                                                object-contain
-                                                rounded-xl
-                                            "
-                                        />
-
-                                    </div>
-
-                                </div>
-
-                            )}
-
-                        </div>
-
-
-                        {/* Modal Footer */}
-                        <div className="
-                            px-6
-                            py-4
-                            border-t
-                            border-rose-100
-                            bg-rose-50/40
-                            flex
-                            justify-end
-                            gap-3
-                        ">
-
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowImagePicker(false);
-                                    setImageUrl("");
-                                }}
-                                className="
-                                    px-6
-                                    h-11
-                                    rounded-xl
-                                    bg-white
-                                    border
-                                    border-rose-100
-                                    text-rose-600
-                                    font-bold
-                                    hover:bg-rose-50
-                                    transition
-                                "
-                            >
-                                Cancel
-                            </button>
-
-
-                            <button
-                                type="button"
-                                onClick={handleAddImage}
-                                className="
-                                    px-6
-                                    h-11
-                                    rounded-xl
-                                    bg-gradient-to-r
-                                    from-rose-500
-                                    to-orange-400
-                                    text-white
-                                    font-bold
-                                    shadow-md
-                                    shadow-rose-200
-                                    hover:shadow-lg
-                                    transition
-                                "
-                            >
-                                Add Image
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            )}
-
-
-
 
         </div>
     );
