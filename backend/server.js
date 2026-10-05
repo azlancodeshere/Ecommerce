@@ -38,7 +38,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoute);
-
+app.use("/uploads", express.static("uploads"))
 
 
 
