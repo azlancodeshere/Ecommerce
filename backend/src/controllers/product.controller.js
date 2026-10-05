@@ -7,14 +7,16 @@ const createProduct = async (req,res) =>{
 
     try {
 
-        const {productname, description, price, quantity, category, sku, lowStockThreshold, images} =req.body;
+        const {productname, description, price, quantity, category, sku, lowStockThreshold} =req.body;
+
+        const files = req.files;
 
         if(!productname || 
              price === undefined || 
               quantity === undefined ||
                !category || !sku ||
-            !images ||
-            images.length === 0
+            !files ||
+            files.length === 0
         ){
                 throw new ApiError(
                     400,
@@ -48,7 +50,7 @@ const createProduct = async (req,res) =>{
                 category,
                 sku,
                 lowStockThreshold,
-                images,
+                images:imagesUrls,
                 admin:req.user._id
                });
 
