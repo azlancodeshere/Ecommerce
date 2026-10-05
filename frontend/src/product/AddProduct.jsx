@@ -22,9 +22,7 @@ const AddProduct = () => {
     const [imagePreviews, setImagePreviews] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // -----------------------------
-    // Normal input handler
-    // -----------------------------
+   
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -34,9 +32,7 @@ const AddProduct = () => {
         }));
     };
 
-    // -----------------------------
-    // Image selection
-    // -----------------------------
+    
     const handleImageChange = (e) => {
         const selectedFiles = Array.from(e.target.files || []);
 
@@ -55,7 +51,7 @@ const AddProduct = () => {
 
         const filesToAdd = selectedFiles.slice(0, remainingSlots);
 
-        // Validate files
+        
         for (const file of filesToAdd) {
             if (!file.type.startsWith("image/")) {
                 alert(`${file.name} is not a valid image.`);
@@ -70,13 +66,13 @@ const AddProduct = () => {
             }
         }
 
-        // Add files
+       
         setFormData((prev) => ({
             ...prev,
             images: [...prev.images, ...filesToAdd]
         }));
 
-        // Create previews
+        
         const newPreviews = filesToAdd.map((file) => ({
             file,
             url: URL.createObjectURL(file)
@@ -87,13 +83,10 @@ const AddProduct = () => {
             ...newPreviews
         ]);
 
-        // Reset input
+       
         e.target.value = "";
     };
 
-    // -----------------------------
-    // Remove image
-    // -----------------------------
     const handleRemoveImage = (index) => {
         setImagePreviews((prev) => {
             const removedPreview = prev[index];
@@ -111,9 +104,7 @@ const AddProduct = () => {
         }));
     };
 
-    // -----------------------------
-    // Cleanup preview URLs
-    // -----------------------------
+   
     useEffect(() => {
         return () => {
             imagePreviews.forEach((preview) => {
@@ -122,9 +113,7 @@ const AddProduct = () => {
         };
     }, [imagePreviews]);
 
-    // -----------------------------
-    // Submit product
-    // -----------------------------
+   
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -149,8 +138,7 @@ const AddProduct = () => {
                 formData.lowStockThreshold || "10"
             );
 
-            // Important:
-            // backend => upload.array("images", 5)
+            
             formData.images.forEach((file) => {
                 data.append("images", file);
             });
@@ -202,7 +190,7 @@ const AddProduct = () => {
 
                 <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-10">
 
-                    {/* Page Header */}
+                   
                     <div className="mb-8">
 
                         <p className="text-sm text-rose-500 font-bold mb-1">
@@ -219,7 +207,7 @@ const AddProduct = () => {
 
                     </div>
 
-                    {/* Main Card */}
+                   
                     <div className="
                         bg-gradient-to-br
                         from-white
@@ -233,7 +221,7 @@ const AddProduct = () => {
                         overflow-hidden
                     ">
 
-                        {/* Card Header */}
+                       
                         <div className="
                             px-5
                             sm:px-8
@@ -294,16 +282,18 @@ const AddProduct = () => {
 
                         </div>
 
-                        {/* Form */}
+                       
+                       
                         <form
                             onSubmit={handleSubmit}
                             className="p-5 sm:p-8 lg:p-10"
                         >
 
-                            {/* Basic Information */}
+                            
+                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                                {/* Product Name */}
+
                                 <div>
 
                                     <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -338,7 +328,8 @@ const AddProduct = () => {
 
                                 </div>
 
-                                {/* SKU */}
+                              
+                              
                                 <div>
 
                                     <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -373,7 +364,7 @@ const AddProduct = () => {
 
                                 </div>
 
-                                {/* Price */}
+
                                 <div>
 
                                     <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -425,7 +416,8 @@ const AddProduct = () => {
 
                                 </div>
 
-                                {/* Quantity */}
+                               
+                               
                                 <div>
 
                                     <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -461,7 +453,8 @@ const AddProduct = () => {
 
                                 </div>
 
-                                {/* Category */}
+                               
+                               
                                 <div>
 
                                     <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -511,7 +504,8 @@ const AddProduct = () => {
 
                                 </div>
 
-                                {/* Low Stock */}
+                              
+                              
                                 <div>
 
                                     <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -552,7 +546,8 @@ const AddProduct = () => {
 
                             </div>
 
-                            {/* Description */}
+                           
+                           
                             <div className="mt-7">
 
                                 <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -588,7 +583,8 @@ const AddProduct = () => {
 
                             </div>
 
-                            {/* Product Images */}
+                           
+                           
                             <div className="mt-7">
 
                                 <label className="block text-sm font-bold text-rose-950 mb-2">
@@ -613,7 +609,8 @@ const AddProduct = () => {
                                     transition
                                 ">
 
-                                    {/* Hidden input */}
+                                 
+                                 
                                     <input
                                         id="product-images"
                                         type="file"
@@ -688,7 +685,8 @@ const AddProduct = () => {
 
                                 </div>
 
-                                {/* Selected Images */}
+                            
+                            
                                 {imagePreviews.length > 0 && (
 
                                     <div className="mt-6">
@@ -807,7 +805,8 @@ const AddProduct = () => {
 
                             </div>
 
-                            {/* Bottom Buttons */}
+                           
+                           
                             <div className="
                                 flex
                                 flex-col-reverse

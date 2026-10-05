@@ -14,13 +14,13 @@ router.route("/create-product").post(
     createProduct)
 
  
-router.route("/single-product/:id").post(
+router.route("/single-product/:id").get(
     authMiddleware,
     adminMiddleware,
     getSingleProduct
 )
 
-router.route("/all-product").get(
+router.route("/all-products").get(
     authMiddleware,
     adminMiddleware,
     getAllProducts

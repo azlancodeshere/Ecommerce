@@ -4,6 +4,7 @@ import UserHomePage from "./Home/UserHomePage.jsx"
 import AdminHomePage from "./Home/AdminHomePage.jsx"
 import LoginPage from "./Pages/LoginPage.jsx"
 import AddProduct from "./product/AddProduct.jsx"
+import AllProductPage from "./product/AllProductPage.jsx"
 
 import './App.css'
 
@@ -12,12 +13,16 @@ function App() {
 
   return (
     <Routes>
-
+       
+       <Route path="/" element={<LoginPage />} />
       <Route path="/register"  element={<RegisterPage />} />
       <Route path="/home"  element={<UserHomePage />} />
       <Route path="/admin"  element={<AdminHomePage />} />  
       <Route path="/login"  element={<LoginPage />} />
       <Route path="/add-product"  element={<AddProduct />} />
+       <Route path="/all-Product"  element={<AllProductPage/>} />
+      
+
      
      
     </Routes>
