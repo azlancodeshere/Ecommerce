@@ -10,6 +10,8 @@ const AllProductPage = () => {
 
 const [products, setProducts] = useState([]);
 const [newProducts , setNewProducts] = useState(null)
+const [search, setSearch] = useState("")
+const [category, setCategory] = useState("")
 
 
 const getProducts = async () =>{
@@ -27,6 +29,17 @@ const getProducts = async () =>{
     }
 }
 
+
+const searchProducts = products.filter((product)=>{
+    const matchSearch = product.productname
+    .toLowerCase()
+    .includes(search.toLowerCase()) ||
+    product.sku.toLowerCase().includes(search.toLowerCase());
+
+    const matchCategory = category === "" || product.category === category;
+
+    return matchSearch && matchCategory;
+})
 
 
 
@@ -266,6 +279,8 @@ useEffect(()=>{
 
                         <input
                             type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search products..."
                             className="
                                 w-full
@@ -292,6 +307,8 @@ useEffect(()=>{
 
                    
                     <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
                         className="
                             w-full
                             md:w-[280px]
@@ -311,19 +328,19 @@ useEffect(()=>{
                         "
                     >
 
-                        <option>
+                        <option value="">
                             All Categories
                         </option>
 
-                        <option>
+                        <option value="shoes">
                             Shoes
                         </option>
 
-                        <option>
+                        <option value="clothing">
                             Clothing
                         </option>
 
-                        <option>
+                        <option value="perfume">
                             Perfume
                         </option>
 
@@ -332,7 +349,6 @@ useEffect(()=>{
                 </div>
 
 
-              
                 <div className="
                     bg-white/90
                     rounded-3xl
@@ -351,7 +367,6 @@ useEffect(()=>{
                             border-collapse
                         ">
 
-                           
                             <thead>
 
                                 <tr className="
@@ -449,7 +464,7 @@ useEffect(()=>{
 
                            
                          <tbody>
-    {products.map((product) => (
+    {searchProducts.map((product) => (
         <tr
             key={product._id}
             className="
