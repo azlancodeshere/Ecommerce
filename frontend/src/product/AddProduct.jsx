@@ -5,8 +5,12 @@ import api from "../api/api";
 const MAX_IMAGES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-const AddProduct = () => {
+const AddProduct = ({product, onClose}) => {
     const navigate = useNavigate();
+
+    const [imagePreviews, setImagePreviews] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
     const [formData, setFormData] = useState({
         productname: "",
@@ -19,9 +23,44 @@ const AddProduct = () => {
         images: []
     });
 
-    const [imagePreviews, setImagePreviews] = useState([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
+   useEffect(() => {
+    if (product) {
+        setFormData({
+            productname: product.productname || "",
+            description: product.description || "",
+            price: product.price ?? "",
+            quantity: product.quantity ?? "",
+            category: product.category || "",
+            sku: product.sku || "",
+            lowStockThreshold: product.lowStockThreshold ?? "",
+            images: product.images || []
+        });
+
+        setImagePreviews(
+            (product.images || []).map((image) => ({
+                file: null,
+                url: `http://localhost:5000/${image.replace(/^\/+/, "")}`,
+                existing: true
+            }))
+        );
+    } else {
+        setFormData({
+            productname: "",
+            sku: "",
+            price: "",
+            quantity: "",
+            category: "",
+            lowStockThreshold: "",
+            description: "",
+            images: []
+        });
+
+        setImagePreviews([]);
+    }
+}, [product]);
+
+   
    
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -33,155 +72,282 @@ const AddProduct = () => {
     };
 
     
-    const handleImageChange = (e) => {
-        const selectedFiles = Array.from(e.target.files || []);
+   const handleImageChange = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
 
-        if (selectedFiles.length === 0) {
-            return;
-        }
+    if (selectedFiles.length === 0) {
+        return;
+    }
 
-        // Check total image limit
-        const remainingSlots = MAX_IMAGES - formData.images.length;
+    const remainingSlots = MAX_IMAGES - formData.images.length;
 
-        if (remainingSlots <= 0) {
-            alert(`You can upload maximum ${MAX_IMAGES} images.`);
+    if (remainingSlots <= 0) {
+        alert(`You can upload maximum ${MAX_IMAGES} images.`);
+        e.target.value = "";
+        return;
+    }
+
+    const filesToAdd = selectedFiles.slice(0, remainingSlots);
+
+    for (const file of filesToAdd) {
+        if (!file.type.startsWith("image/")) {
+            alert(`${file.name} is not a valid image.`);
             e.target.value = "";
             return;
         }
 
-        const filesToAdd = selectedFiles.slice(0, remainingSlots);
+        if (file.size > MAX_FILE_SIZE) {
+            alert(`${file.name} is larger than 5MB.`);
+            e.target.value = "";
+            return;
+        }
+    }
 
-        
-        for (const file of filesToAdd) {
-            if (!file.type.startsWith("image/")) {
-                alert(`${file.name} is not a valid image.`);
-                e.target.value = "";
-                return;
-            }
+    setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...filesToAdd]
+    }));
 
-            if (file.size > MAX_FILE_SIZE) {
-                alert(`${file.name} is larger than 5MB.`);
-                e.target.value = "";
-                return;
-            }
+    const newPreviews = filesToAdd.map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+        existing: false
+    }));
+
+    setImagePreviews((prev) => [
+        ...prev,
+        ...newPreviews
+    ]);
+
+    e.target.value = "";
+};
+
+
+
+
+   const handleRemoveImage = (index) => {
+    setImagePreviews((prev) => {
+        const removedPreview = prev[index];
+
+        if (
+            removedPreview?.url &&
+            !removedPreview.existing
+        ) {
+            URL.revokeObjectURL(removedPreview.url);
         }
 
-       
-        setFormData((prev) => ({
-            ...prev,
-            images: [...prev.images, ...filesToAdd]
-        }));
+        return prev.filter((_, i) => i !== index);
+    });
 
-        
-        const newPreviews = filesToAdd.map((file) => ({
-            file,
-            url: URL.createObjectURL(file)
-        }));
+    setFormData((prev) => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== index)
+    }));
+};
+   
 
-        setImagePreviews((prev) => [
-            ...prev,
-            ...newPreviews
-        ]);
+   
+    
+   
 
-       
-        e.target.value = "";
-    };
 
-    const handleRemoveImage = (index) => {
-        setImagePreviews((prev) => {
-            const removedPreview = prev[index];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-            if (removedPreview?.url) {
-                URL.revokeObjectURL(removedPreview.url);
+    try {
+        setIsSubmitting(true);
+
+        if (product) {
+
+            if (
+                !formData.category ||
+                !formData.description.trim() ||
+                formData.lowStockThreshold === "" ||
+                formData.price === "" ||
+                !formData.productname.trim() ||
+                formData.quantity === "" ||
+                !formData.sku.trim()
+            ) {
+                alert("All fields are required");
+                return;
             }
 
-            return prev.filter((_, i) => i !== index);
-        });
+            if (formData.images.length === 0) {
+                alert("Please keep at least one product image.");
+                return;
+            }
 
-        setFormData((prev) => ({
-            ...prev,
-            images: prev.images.filter((_, i) => i !== index)
-        }));
-    };
+            const data = new FormData();
 
-   
-    useEffect(() => {
-        return () => {
-            imagePreviews.forEach((preview) => {
-                URL.revokeObjectURL(preview.url);
-            });
-        };
-    }, [imagePreviews]);
+            data.append(
+                "productname",
+                formData.productname.trim()
+            );
 
-   
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+            data.append(
+                "description",
+                formData.description.trim()
+            );
+
+            data.append(
+                "price",
+                formData.price
+            );
+
+            data.append(
+                "quantity",
+                formData.quantity
+            );
+
+            data.append(
+                "category",
+                formData.category
+            );
+
+            data.append(
+                "sku",
+                formData.sku.trim()
+            );
+
+            data.append(
+                "lowStockThreshold",
+                formData.lowStockThreshold
+            );
+
+            // Existing images
+            formData.images
+                .filter((image) => typeof image === "string")
+                .forEach((image) => {
+                    data.append("existingImages", image);
+                });
+
+            // New images
+            formData.images
+                .filter((image) => image instanceof File)
+                .forEach((file) => {
+                    data.append("images", file);
+                });
+
+            const response = await api.patch(
+                `/products/update-product/${product._id}`,
+                data
+            );
+
+            console.log(
+                "UPDATE RESPONSE:",
+                response.data
+            );
+
+            alert("Product updated successfully");
+
+            onClose(response.data.data);
+
+            return;
+        }
+
+        
+        // CREATE PRODUCT
+       
+
+        if (
+            !formData.category ||
+            !formData.description.trim() ||
+            formData.lowStockThreshold === "" ||
+            formData.price === "" ||
+            !formData.productname.trim() ||
+            formData.quantity === "" ||
+            !formData.sku.trim()
+        ) {
+            alert("All fields are required");
+            return;
+        }
 
         if (formData.images.length === 0) {
             alert("Please select at least one product image.");
             return;
         }
 
-        try {
-            setIsSubmitting(true);
+        const data = new FormData();
 
-            const data = new FormData();
+        data.append(
+            "productname",
+            formData.productname.trim()
+        );
 
-            data.append("productname", formData.productname.trim());
-            data.append("description", formData.description.trim());
-            data.append("price", formData.price);
-            data.append("quantity", formData.quantity);
-            data.append("category", formData.category);
-            data.append("sku", formData.sku.trim());
-            data.append(
-                "lowStockThreshold",
-                formData.lowStockThreshold || "10"
-            );
+        data.append(
+            "description",
+            formData.description.trim()
+        );
 
-            
-            formData.images.forEach((file) => {
-                data.append("images", file);
-            });
+        data.append(
+            "price",
+            formData.price
+        );
 
-            console.log("Sending product data...");
-            console.log("Images:", formData.images);
+        data.append(
+            "quantity",
+            formData.quantity
+        );
 
-            const response = await api.post(
-                "/products/create-product",
-                data
-            );
+        data.append(
+            "category",
+            formData.category
+        );
 
-            console.log(
-                "CREATE PRODUCT RESPONSE:",
-                response.data
-            );
+        data.append(
+            "sku",
+            formData.sku.trim()
+        );
 
-            alert("Product created successfully.");
+        data.append(
+            "lowStockThreshold",
+            formData.lowStockThreshold
+        );
 
-            navigate("/admin", {
-                replace: true
-            });
+        formData.images.forEach((file) => {
+            data.append("images", file);
+        });
 
-        } catch (error) {
-            console.error(
-                "CREATE PRODUCT ERROR:",
-                error
-            );
+        const response = await api.post(
+            "/products/create-product",
+            data
+        );
 
-            console.error(
-                "ERROR RESPONSE:",
-                error.response?.data
-            );
+        console.log(
+            "CREATE RESPONSE:",
+            response.data
+        );
 
-            alert(
-                error.response?.data?.message ||
-                "Something went wrong while creating product."
-            );
+        alert("Product created successfully");
 
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+        navigate("/admin");
+
+    } catch (error) {
+
+        console.log(
+            "Error in product:",
+            error
+        );
+
+        console.log(
+            "ERROR RESPONSE:",
+            error.response?.data
+        );
+
+        alert(
+            error.response?.data?.message ||
+            "Something went wrong"
+        );
+
+    } finally {
+        setIsSubmitting(false);
+    }
+};
+
+
+
+
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#fff7f8] via-[#fffaf8] to-[#fff4ef] text-slate-800">
@@ -722,7 +888,7 @@ const AddProduct = () => {
                                             {imagePreviews.map((preview, index) => (
 
                                                 <div
-                                                    key={`${preview.file.name}-${index}`}
+                                                    key={`${preview.url}-${index}`}
                                                     className="
                                                         relative
                                                         overflow-hidden
@@ -767,7 +933,7 @@ const AddProduct = () => {
                                                             text-rose-900
                                                             backdrop-blur-sm
                                                         ">
-                                                            {preview.file.name}
+                                                           {preview.existing ? "Existing Image" : preview.file.name}
                                                         </span>
 
                                                         <button
@@ -821,7 +987,13 @@ const AddProduct = () => {
 
                                 <button
                                     type="button"
-                                    onClick={() => navigate("/admin")}
+                                    onClick={() => {
+                           if (product) {
+                                     onClose();
+                                       } else {
+                                     navigate("/admin");
+                                                  }
+                                                 }}
                                     className="
                                         w-full
                                         sm:w-auto
@@ -865,9 +1037,14 @@ const AddProduct = () => {
                                         disabled:hover:translate-y-0
                                     "
                                 >
-                                    {isSubmitting
-                                        ? "Creating Product..."
-                                        : "Add Product"}
+                                   {isSubmitting ?
+                                   product ?"Updating Product..."
+                                   :"Creating Product..."
+                                   :product
+                                   ?
+                                   "Update Product"
+                                   :"Add Product"
+                                }
                                 </button>
 
                             </div>

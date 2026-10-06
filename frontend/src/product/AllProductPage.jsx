@@ -2,12 +2,14 @@ import React from "react";
 import { FiGrid, FiSearch } from "react-icons/fi";
 import api from "../api/api.js";
 import { useState, useEffect } from "react";
+import AddProduct from "./AddProduct.jsx";
 
 
 
 const AllProductPage = () => {
 
 const [products, setProducts] = useState([]);
+const [newProducts , setNewProducts] = useState(null)
 
 
 const getProducts = async () =>{
@@ -26,23 +28,58 @@ const getProducts = async () =>{
 }
 
 
-const getStockStatus = ({quantity, lowStockThreshold}) =>{
-        
-    if(quantity === 0){
-        return "Out of stock"
+
+
+const getStockStatus = ({ quantity, lowStockThreshold }) => {
+    if (quantity === 0) {
+        return (
+            <span className="inline-block px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium whitespace-nowrap">
+                Out of Stock
+            </span>
+        );
     }
 
-    if(quantity <= lowStockThreshold){
-        return "Low stock"
+    if (quantity <= lowStockThreshold) {
+        return (
+            <span className="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium whitespace-nowrap">
+                Low Stock
+            </span>
+        );
     }
 
-    return "Active"
-}
- 
+    return (
+        <span className="inline-block px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium whitespace-nowrap">
+            In Stock
+        </span>
+    );
+};
 
 useEffect(()=>{
     getProducts()
-})
+},[])
+
+ const updateProduct = (product) =>{
+    setNewProducts(product);
+ }
+
+
+ const deleteProduct = async (id) =>{
+    try {
+        const response = await api.delete(
+            `/products/delete-product/${id}`
+        );
+
+       setProducts((prevProducts)=>{
+       return prevProducts.filter(
+            (product)=> product._id !== id
+        )
+       })
+        
+    } catch (error) {
+         console.log("Delete error:", error);
+            console.log("Server error:", error.response?.data);
+    }
+ }
 
 
     return (
@@ -457,13 +494,7 @@ useEffect(()=>{
                             {product.productname}
                         </p>
 
-                        <p className="
-                            text-sm
-                            text-rose-400
-                            mt-1
-                        ">
-                            {product.description}
-                        </p>
+                        
                     </div>
 
                 </div>
@@ -556,6 +587,9 @@ useEffect(()=>{
 
                     <button
                         type="button"
+                         onClick={()=> 
+                            updateProduct(product)
+                         }
                         className="
                             px-5
                             py-3
@@ -577,6 +611,9 @@ useEffect(()=>{
                     </button>
 
                     <button
+                    onClick={()=>
+                        deleteProduct(product._id)
+                    }
                         type="button"
                         className="
                             px-5
@@ -607,6 +644,25 @@ useEffect(()=>{
                        
                         </table>
 
+
+                      {newProducts && (
+                    <AddProduct
+                        product={newProducts}
+                        onClose={(updatedProduct) => {
+                            if (updatedProduct) {
+                                setProducts((prevProducts) =>
+                                    prevProducts.map((product) =>
+                                        product._id === updatedProduct._id
+                                            ? updatedProduct
+                                            : product
+                                    )
+                                );
+                            }
+
+                            setNewProducts(null);
+                        }}
+                    />
+                    )}
                     </div>
 
                 </div>

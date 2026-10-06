@@ -29,6 +29,7 @@ router.route("/all-products").get(
 router.route("/update-product/:id").patch(
     authMiddleware,
     adminMiddleware,
+    upload.array("images", 5),
     updateProduct
 
 )

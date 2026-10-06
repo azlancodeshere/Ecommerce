@@ -1,5 +1,6 @@
 import { Product } from "../models/product.model.js";
-
+import fs from "fs/promises";
+import path from "path";
 import { ApiError } from "../../utils/ApiError.js"
 import { ApiResponse } from "../../utils/ApiResponse.js"
 
@@ -42,7 +43,7 @@ const createProduct = async (req,res) =>{
                }
         
                const imageUrls = files.map(
-                (file) =>`uploads/products/${file.filename}`
+                (file) =>`/uploads/products/${file.filename}`
                )
 
                const product = await Product.create({
@@ -87,7 +88,7 @@ const getSingleProduct = async (req,res) =>{
 
         //const { productId } = req.params;
         const product = await Product.findOne({
-            _id:req.params._id, //_id: productId,
+            _id:req.params.id, //_id: productId,
             admin:req.user._id
         })
 
@@ -143,99 +144,169 @@ const getAllProducts = async (req,res) =>{
     }
 }
 
-const deleteProduct = async (req,res) =>{
+const deleteProduct = async (req, res) => {
     try {
-        const products = await Product.findOneAndDelete({
-            _id:req.params._id,
-            admin:req.user._id
-        })
+        const product = await Product.findOne({
+            _id: req.params.id,
+            admin: req.user._id
+        });
 
-        if(!products){
+        if (!product) {
             throw new ApiError(
                 404,
                 "Product not found"
-            )
+            );
         }
-       
+
+        console.log("PRODUCT IMAGES:", product.images);
+
+        // Delete product images from uploads/products
+        for (const image of product.images || []) {
+            try {
+                const filename = path.basename(image);
+
+                const imagePath = path.join(
+                    process.cwd(),
+                    "uploads",
+                    "products",
+                    filename
+                );
+
+
+                await fs.unlink(imagePath);
+
+            
+            } catch (imageError) {
+                console.log(
+                    "Image delete error:",
+                    imageError.message
+                );
+
+                // Image already missing hai to ignore karo
+                if (imageError.code !== "ENOENT") {
+                    throw imageError;
+                }
+            }
+        }
+
+        // Delete product from MongoDB
+        await Product.deleteOne({
+            _id: product._id
+        });
 
         return res.status(200).json(
             new ApiResponse(
                 200,
-                "product deleted successfully"
+                "Product and images deleted successfully",
+                product
             )
-        )
-        
+        );
+
     } catch (error) {
+        console.log("DELETE PRODUCT ERROR:", error);
 
         return res.status(
             error.statusCode || 500
         ).json(
             new ApiError(
                 error.statusCode || 500,
-                error.message || "something went wrong"
+                error.message || "Something went wrong"
             )
-        )
-        
+        );
     }
-}
+};
 
-const updateProduct = async (req,res) =>{
-    
+const updateProduct = async (req, res) => {
     try {
+        ;
 
-        const {productId} = req.params;
+        const {
+            productname,
+            description,
+            price,
+            quantity,
+            category,
+            sku,
+            lowStockThreshold,
+            existingImages
+        } = req.body;
 
-        const product = await Product.findOneAndUpdate({
+        // Existing images that user wants to keep
+        let keptImages = existingImages || [];
 
-        
-            _id:productId,
-            admin:req.user._id
-        },
-
-
-       
-
-//         product.price = price;
-// product.quantity = quantity;
-// product.category = category;
-
-        req.body,
-
-        {
-     new :true,
-     runValidators:true
+        // If only one image comes, convert it into array
+        if (!Array.isArray(keptImages)) {
+            keptImages = [keptImages];
         }
 
+        // New uploaded images
+        const newImages = (req.files || []).map(
+            (file) => `/uploads/products/${file.filename}`
         );
 
-        if(!product){
+        // Final images = old kept images + new images
+        const finalImages = [
+            ...keptImages,
+            ...newImages
+        ];
+
+        const product = await Product.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                admin: req.user._id,
+            },
+            {
+                $set: {
+                    productname,
+                    description,
+                    price,
+                    quantity,
+                    category,
+                    sku,
+                    lowStockThreshold,
+                    images: finalImages,
+                },
+            },
+            {
+                returnDocument: "after",
+                runValidators: true,
+            }
+        );
+
+        console.log("UPDATED PRODUCT:", product);
+
+        if (!product) {
             throw new ApiError(
                 404,
-                "product not found"
-            )
+                "Product not found"
+            );
         }
 
         return res.status(200).json(
             new ApiResponse(
                 200,
-                "producted updated sucessfully",
+                "Product updated successfully",
                 product
             )
-        )
-        
+        );
+
     } catch (error) {
 
-        return res.status(error.statusCode || 500).json(
+        console.log(
+            "UPDATE PRODUCT ERROR:",
+            error
+        );
+
+        return res.status(
+            error.statusCode || 500
+        ).json(
             new ApiError(
-                 error.statusCode || 500,
+                error.statusCode || 500,
                 error.message || "Something went wrong"
             )
-        )
-        
+        );
     }
-
-}
-
+};
 
 
 export {
