@@ -376,8 +376,10 @@ const AdminSideBar = () => {
                             {/* CATEGORIES */}
                             <button
                                 type="button"
-                                onClick={() => {
+                                onClick={() => {{
+                                    navigate("/categories")
                                     closeSidebar();
+                                }
                                     // Future route:
                                     // handleNavigate("/categories");
                                 }}

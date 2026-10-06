@@ -26,7 +26,8 @@ function ProductProvider({children}){
 
    const productvalue={
         products,
-        setProducts,getProducts
+        setProducts,
+        getProducts
     }
 
       return(
