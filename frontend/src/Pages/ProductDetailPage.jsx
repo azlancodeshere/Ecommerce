@@ -46,6 +46,7 @@ const ProductDetailPage = () => {
         .sort((a, b) => {
 
             const priceDifferenceA =
+            //abs makes negative to possitive
                 Math.abs(Number(a.price) - Number(product.price));
 
             const priceDifferenceB =
