@@ -22,7 +22,7 @@ router.route("/single-product/:id").get(
 
 router.route("/all-products").get(
     authMiddleware,
-    adminMiddleware,
+   
     getAllProducts
 )
 

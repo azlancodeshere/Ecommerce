@@ -6,7 +6,7 @@ import LoginPage from "./Pages/LoginPage.jsx"
 import AddProduct from "./product/AddProduct.jsx"
 import AllProductPage from "./product/AllProductPage.jsx"
 import CategoriesPage from "./Categories/CategoriesPage.jsx"
-
+import CategoryPage from "./Pages/UserCategoryPage.jsx"
 import './App.css'
 
 function App() {
@@ -23,6 +23,10 @@ function App() {
       <Route path="/add-product"  element={<AddProduct />} />
        <Route path="/all-Product"  element={<AllProductPage/>} />
        <Route path="/categories" element={<CategoriesPage/>}/>
+       <Route
+    path="/products/category/:category"
+    element={<CategoryPage />}
+/>
       
 
      

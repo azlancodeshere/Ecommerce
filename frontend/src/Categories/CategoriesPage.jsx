@@ -11,6 +11,8 @@ const CategoriesPage = () => {
         )
     ];
 
+   
+
     return (
         <div className="
             min-h-screen

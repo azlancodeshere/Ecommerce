@@ -12,6 +12,8 @@ import {
   FiStar,
   FiChevronRight,
 } from "react-icons/fi";
+import HomeTrendingProduct from "./HomeTrendingProduct.jsx";
+import {useNavigate} from "react-router-dom"
 
 const UserHomePage = () => {
   const categories = [
@@ -37,48 +39,9 @@ const UserHomePage = () => {
     },
   ];
 
-  const products = [
-    {
-      id: 1,
-      name: "Premium Oversized T-Shirt",
-      category: "Clothing",
-      price: 999,
-      oldPrice: 1499,
-      rating: 4.8,
-      reviews: 124,
-      badge: "Trending",
-    },
-    {
-      id: 2,
-      name: "Air Runner Sneakers",
-      category: "Shoes",
-      price: 2499,
-      oldPrice: 3499,
-      rating: 4.7,
-      reviews: 89,
-      badge: "Popular",
-    },
-    {
-      id: 3,
-      name: "Luxury Oud Perfume",
-      category: "Perfume",
-      price: 1799,
-      oldPrice: 2299,
-      rating: 4.9,
-      reviews: 156,
-      badge: "Best Seller",
-    },
-    {
-      id: 4,
-      name: "Classic Leather Bag",
-      category: "Accessories",
-      price: 2199,
-      oldPrice: 2999,
-      rating: 4.6,
-      reviews: 72,
-      badge: "New",
-    },
-  ];
+  const navigate = useNavigate();
+
+ 
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-gray-900">
@@ -465,8 +428,9 @@ const UserHomePage = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
 
             {categories.map((category) => (
-              <div
+              <button
                 key={category.name}
+                onClick={()=> navigate(`/products/category/${category.name}`)}
                 className="group bg-white rounded-2xl border border-gray-100 p-6 hover:border-rose-200 hover:shadow-xl hover:shadow-rose-100/50 transition-all duration-300 cursor-pointer"
               >
 
@@ -487,7 +451,7 @@ const UserHomePage = () => {
                   <FiArrowRight className="group-hover:translate-x-1 transition" />
                 </div>
 
-              </div>
+              </button>
             ))}
 
           </div>
@@ -504,110 +468,7 @@ const UserHomePage = () => {
         className="py-20 bg-white"
       >
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          <div className="flex items-end justify-between mb-10">
-
-            <div>
-              <p className="text-rose-500 uppercase tracking-[3px] text-xs font-bold mb-3">
-                Handpicked For You
-              </p>
-
-              <h2 className="text-3xl sm:text-4xl font-black">
-                Featured Products
-              </h2>
-
-              <p className="text-gray-500 mt-2">
-                Trending products our customers love.
-              </p>
-            </div>
-
-            <button className="hidden sm:flex items-center gap-2 text-sm font-bold text-rose-500">
-              View All
-              <FiChevronRight />
-            </button>
-
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-100 transition-all duration-300"
-              >
-
-                {/* Product Image */}
-                <div className="relative h-72 bg-gradient-to-br from-gray-50 to-rose-50 flex items-center justify-center overflow-hidden">
-
-                  <span className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white text-xs font-bold text-rose-500 shadow-sm">
-                    {product.badge}
-                  </span>
-
-                  <button className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm hover:text-rose-500 transition">
-                    <FiHeart />
-                  </button>
-
-                  <FiShoppingBag className="text-8xl text-rose-200 group-hover:scale-110 transition-transform duration-500" />
-
-                </div>
-
-                {/* Product Info */}
-                <div className="p-5">
-
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
-                    {product.category}
-                  </p>
-
-                  <h3 className="font-bold text-base mt-2 line-clamp-2 min-h-[48px]">
-                    {product.name}
-                  </h3>
-
-                  <div className="flex items-center gap-2 mt-3">
-
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      <FiStar className="fill-current text-sm" />
-
-                      <span className="text-xs font-bold text-gray-600">
-                        {product.rating}
-                      </span>
-                    </div>
-
-                    <span className="text-xs text-gray-400">
-                      ({product.reviews})
-                    </span>
-
-                  </div>
-
-                  <div className="flex items-center justify-between mt-4">
-
-                    <div className="flex items-center gap-2">
-
-                      <span className="text-xl font-black">
-                        ₹{product.price}
-                      </span>
-
-                      <span className="text-sm text-gray-400 line-through">
-                        ₹{product.oldPrice}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  <button className="w-full mt-5 py-3 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-rose-500 transition flex items-center justify-center gap-2">
-                    <FiShoppingCart />
-                    Add to Cart
-                  </button>
-
-                </div>
-
-              </div>
-            ))}
-
-          </div>
-
-        </div>
+       <HomeTrendingProduct/>
 
       </section>
 

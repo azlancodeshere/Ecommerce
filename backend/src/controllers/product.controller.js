@@ -121,9 +121,8 @@ const getSingleProduct = async (req,res) =>{
 
 const getAllProducts = async (req,res) =>{
     try {
-        const products = await Product.find({
-            admin:req.user._id
-        }).sort({
+        // acces of all-products for all usrs and admin
+        const products = await Product.find({}).sort({
             createdAt: -1
         });
 
