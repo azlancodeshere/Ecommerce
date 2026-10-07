@@ -7,6 +7,7 @@ import AddProduct from "./product/AddProduct.jsx"
 import AllProductPage from "./product/AllProductPage.jsx"
 import CategoriesPage from "./Categories/CategoriesPage.jsx"
 import CategoryPage from "./Pages/UserCategoryPage.jsx"
+import ProductDetailPage from "./Pages/ProductDetailPage";
 import './App.css'
 
 function App() {
@@ -23,11 +24,12 @@ function App() {
       <Route path="/add-product"  element={<AddProduct />} />
        <Route path="/all-Product"  element={<AllProductPage/>} />
        <Route path="/categories" element={<CategoriesPage/>}/>
-       <Route
-    path="/products/category/:category"
-    element={<CategoryPage />}
-/>
-      
+       <Route  path="/products/category/:category" element={<CategoryPage />}/>
+       <Route path="/product/:id" element={<ProductDetailPage />}/>
+
+
+  
+    
 
      
      

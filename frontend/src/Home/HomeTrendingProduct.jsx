@@ -11,7 +11,7 @@ import { ProductConext } from "../context/ProductContext.jsx";
 const HomeTrendingProduct = () => {
   const { products } = useContext(ProductConext);
 
-  console.log("PRODUCTS:", products);
+  
 
   const TrendsProducts = Object.values(
     products.reduce((acc, product) => {
@@ -28,9 +28,9 @@ const HomeTrendingProduct = () => {
     }, {})
   ).slice(0, 4);
 
-  
 
-  console.log("TRENDING PRODUCTS:", TrendsProducts);
+
+  
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
