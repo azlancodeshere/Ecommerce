@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import connectDB from "./db/db.js";
 import userRoutes from "./src/routes/User.route.js";
 import productRoute from "./src/routes/product.route.js";
+import CartRoutes from "./src/routes/cart.route.js"
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoute);
+app.use("/api/cart",CartRoutes)
 
 // Uploaded images serve karne ke liye
 app.use(

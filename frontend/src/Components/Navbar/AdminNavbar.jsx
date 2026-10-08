@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 import { FiBell } from "react-icons/fi";
 import { AuthContext } from "../../context/AuthContext";
 
-const AdminNavbar = () => {
+const Admin = () => {
 
     const {
         user,
@@ -77,4 +77,4 @@ const AdminNavbar = () => {
     );
 };
 
-export default AdminNavbar;
+export default Admin;

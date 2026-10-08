@@ -123,6 +123,151 @@ const addToCart = async (req, res) => {
     }
 };
 
+const getCart = async (req,res) =>{
+    try {
+        const cart = await Cart.findOne({
+            user:req.user._id
+        }).populate("items.product")
+
+
+        if(!cart){
+            return res.status(200).json(
+                new ApiResponse(
+                    200,
+                    "Cart is empty",
+                    {
+                        items:[],
+                        totalAmount:0,
+                        totalItems:0
+                    }
+                )
+            );
+        }
+        
+      const totalItems = cart.items.reduce(
+        (total,item)=> total + item.quantity,
+        0
+      )
+     
+       return res.status(200).json(
+            new ApiResponse(
+                200,
+                "Cart fetched successfully",
+                {
+                    ...cart.toObject(),
+                    totalItems
+                }
+            )
+        );
+    } catch (error) {
+
+         console.log("GET CART ERROR:", error);
+
+        return res.status(error.statusCode || 500).json(
+            new ApiError(
+                error.statusCode || 500,
+                error.message || "Something went wrong"
+            )
+        );
+        
+    }
+}
+
+
+const updateCartQuantity = async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+
+        if (!productId) {
+            throw new ApiError(400, "Product ID is required");
+        }
+
+        if (!Number.isInteger(quantity) || quantity < 1) {
+            throw new ApiError(400, "Quantity must be at least 1");
+        }
+
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            throw new ApiError(404, "Product not found");
+        }
+
+        if (quantity > product.quantity) {
+            throw new ApiError(
+                400,
+                `Only ${product.quantity} items available`
+            );
+        }
+
+        const cart = await Cart.findOne({
+            user: req.user._id
+        });
+
+        if (!cart) {
+            throw new ApiError(404, "Cart not found");
+        }
+
+        const cartItem = cart.items.find(
+            (item) =>
+                item.product.toString() === productId.toString()
+        );
+
+        if (!cartItem) {
+            throw new ApiError(404, "Product not found in cart");
+        }
+
+       
+        cartItem.quantity = quantity;
+
+        await cart.save();
+
+       
+        await cart.populate("items.product");
+
+        cart.totalAmount = cart.items.reduce(
+            (total, item) => {
+                return (
+                    total +
+                    Number(item.product.price) * item.quantity
+                );
+            },
+            0
+        );
+
+        await cart.save();
+
+        const totalItems = cart.items.reduce(
+            (total, item) => total + item.quantity,
+            0
+        );
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                "Cart quantity updated successfully",
+                {
+                    ...cart.toObject(),
+                    totalItems
+                }
+            )
+        );
+
+    } catch (error) {
+        console.log("UPDATE CART QUANTITY ERROR:", error);
+
+        return res.status(error.statusCode || 500).json(
+            new ApiError(
+                error.statusCode || 500,
+                error.message || "Something went wrong"
+            )
+        );
+    }
+};
+
+
+
 export {
-    addToCart
+    addToCart,
+    getCart,
+     updateCartQuantity
 };
