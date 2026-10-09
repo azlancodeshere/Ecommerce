@@ -5,10 +5,14 @@ import {
     FiTrash2,
     FiShoppingCart
 } from "react-icons/fi";
+import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import UserNavbar from "../Components/Navbar/UserNavbar";
 import { CartContext } from "../context/CartContext";
 import api from "../api/api.js";
+
+
 
 const CartPage = () => {
 
@@ -19,6 +23,8 @@ const CartPage = () => {
     }, []);
 
     const cartItems = cart?.items || [];
+  
+    const navigate = useNavigate();
 
     
     const updateQuantity = async (productId, newQuantity) => {
@@ -247,7 +253,9 @@ const CartPage = () => {
                                 </div>
 
                                 <button
-                                    type="button"
+                                    type="button" onClick={()=>{
+                                        navigate("/checkout")
+                                    }}
                                     className="w-full mt-6 py-4 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-black hover:from-rose-600 hover:to-orange-600 transition"
                                 >
                                     Proceed to Checkout

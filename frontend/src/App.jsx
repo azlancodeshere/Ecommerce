@@ -1,4 +1,4 @@
-import {Routes, Route} from "react-router-dom"
+import { Routes, Route } from "react-router-dom"
 import RegisterPage from "./Pages/RegisterPage.jsx"
 import UserHomePage from "./Home/UserHomePage.jsx"
 import AdminHomePage from "./Home/AdminHomePage.jsx"
@@ -12,34 +12,35 @@ import CartPage from "./Pages/CartPage.jsx"
 
 
 import './App.css'
+import CheckoutPage from "./Pages/checkout.jsx"
 
 function App() {
-  
+
 
   return (
     <Routes>
-       
-       <Route path="/" element={<LoginPage />} />
-      <Route path="/register"  element={<RegisterPage />} />
-      <Route path="/home"  element={<UserHomePage />} />
-      <Route path="/admin"  element={<AdminHomePage />} />  
-      <Route path="/login"  element={<LoginPage />} />
-      <Route path="/add-product"  element={<AddProduct />} />
-       <Route path="/all-Product"  element={<AllProductPage/>} />
-       <Route path="/categories" element={<CategoriesPage/>}/>
-       <Route  path="/products/category/:category" element={<CategoryPage />}/>
-       <Route path="/product/:id" element={<ProductDetailPage />}/>
-       <Route  path="/cart" element={<CartPage />}
-/>
+
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/home" element={<UserHomePage />} />
+      <Route path="/admin" element={<AdminHomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/add-product" element={<AddProduct />} />
+      <Route path="/all-Product" element={<AllProductPage />} />
+      <Route path="/categories" element={<CategoriesPage />} />
+      <Route path="/products/category/:category" element={<CategoryPage />} />
+      <Route path="/product/:id" element={<ProductDetailPage />} />
+      <Route path="/cart" element={<CartPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
 
 
-  
-    
 
-     
-     
+
+
+
+
     </Routes>
-   
+
   )
 }
 
