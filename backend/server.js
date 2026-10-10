@@ -10,6 +10,7 @@ import userRoutes from "./src/routes/User.route.js";
 import productRoute from "./src/routes/product.route.js";
 import CartRoutes from "./src/routes/cart.route.js"
 import orderRoutes from "./src/routes/order.route.js";
+import dashboardRoutes from "./src/routes/dashboard.route.js";
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productRoute);
 app.use("/api/cart",CartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Uploaded images serve karne ke liye
 app.use(

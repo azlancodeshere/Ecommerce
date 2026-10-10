@@ -1,48 +1,129 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/api.js";
-
-import { ProductConext } from "../context/ProductContext.jsx";
-
-import Card from "../card/Card.jsx";
 
 import {
-    FiMoreVertical,
-    FiArrowUpRight,
-    FiArrowDownRight,
-    FiDollarSign,
-    FiShoppingCart,
-    FiPackage,
-    FiUsers,
     FiPlus,
     FiTruck,
     FiClock,
     FiCheckCircle,
-    FiEdit2,
     FiTrash2,
     FiEye,
+    FiEdit2,
     FiShoppingBag,
+    FiRefreshCw,
 } from "react-icons/fi";
 
+import api from "../api/api.js";
+import { ProductConext } from "../context/ProductContext.jsx";
+import Card from "../card/Card.jsx";
 import AdminNavbar from "../Components/Navbar/AdminNavbar";
 import AdminSideBar from "../Components/sidebar/AdminSideBar";
+import RevenueAnalytics from "../Pages/RevenueAnalytics.jsx";
+import RecentOrders from "../Pages/RecentOrders.jsx";
+
+const initialDashboardStats = {
+    pendingDelivery: 0,
+    pendingOrders: 0,
+    completedOrders: 0,
+};
+
+const apiBaseUrl = (
+    import.meta.env.VITE_BASE_URL || "http://localhost:5000/api"
+).replace(/\/+$/, "");
+
+const serverOrigin = apiBaseUrl.replace(/\/api$/, "");
+
+const getProductImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+
+    if (/^https?:\/\//i.test(imagePath)) {
+        return imagePath;
+    }
+
+    return `${serverOrigin}/${String(imagePath).replace(/^\/+/, "")}`;
+};
+
+const formatCount = (value) => {
+    return Number(value || 0).toLocaleString("en-IN");
+};
 
 const AdminHomePage = () => {
-
-    const { products, setProducts } = useContext(ProductConext);
-
+    const { products = [], setProducts } = useContext(ProductConext);
     const navigate = useNavigate();
 
-    // =========================
-    // STOCK STATUS
-    // =========================
+    const [dashboardStats, setDashboardStats] = useState(
+        initialDashboardStats
+    );
 
-    const getStockStatus = ({
-        quantity,
-        lowStockThreshold
-    }) => {
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [statsError, setStatsError] = useState("");
+    const [statsRefreshKey, setStatsRefreshKey] = useState(0);
 
-        if (quantity === 0) {
+    const [deletingProductId, setDeletingProductId] = useState(null);
+    const [productActionError, setProductActionError] = useState("");
+
+   
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchDashboardStats = async () => {
+            try {
+                setStatsLoading(true);
+                setStatsError("");
+
+                const response = await api.get("/dashboard/stats");
+                const data = response.data?.data;
+
+                if (!data) {
+                    throw new Error(
+                        "Dashboard API returned an invalid response."
+                    );
+                }
+
+                if (isMounted) {
+                    setDashboardStats({
+                        pendingDelivery:
+                            Number(data.pendingDelivery) || 0,
+                        pendingOrders:
+                            Number(data.pendingOrders) || 0,
+                        completedOrders:
+                            Number(data.completedOrders) || 0,
+                    });
+                }
+            } catch (error) {
+                console.error(
+                    "Dashboard order summary error:",
+                    error.response?.data || error.message
+                );
+
+                if (isMounted) {
+                    setStatsError(
+                        error.response?.data?.message ||
+                            "Unable to load order summary."
+                    );
+                }
+            } finally {
+                if (isMounted) {
+                    setStatsLoading(false);
+                }
+            }
+        };
+
+        fetchDashboardStats();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [statsRefreshKey]);
+
+   
+    const getStockStatus = (product) => {
+        const quantity = Number(product.quantity ?? 0);
+        const lowStockThreshold = Number(
+            product.lowStockThreshold ?? 5
+        );
+
+        if (quantity <= 0) {
             return {
                 text: "Out of Stock",
                 className: "bg-red-50 text-red-600",
@@ -62,683 +143,118 @@ const AdminHomePage = () => {
         };
     };
 
-    // =========================
-    // DELETE PRODUCT
-    // =========================
-
-    const deleteProduct = async (id) =>{
-    try {
-        const response = await api.delete(
-            `/products/delete-product/${id}`
+   
+    const deleteProduct = async (product) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${
+                product.productname || "this product"
+            }"?`
         );
 
-       setProducts((prevProducts)=>{
-       return prevProducts.filter(
-            (product)=> product._id !== id
-        )
-       })
-        
-    } catch (error) {
-         console.log("Delete error:", error);
-            console.log("Server error:", error.response?.data);
-    }
- }
+        if (!confirmed) return;
 
+        setDeletingProductId(product._id);
+        setProductActionError("");
 
-    // =========================
-    // RECENT ORDERS
-    // =========================
+        try {
+            await api.delete(
+                `/products/delete-product/${product._id}`
+            );
 
-    const recentOrders = [
-        {
-            id: "#ORD-1024",
-            customer: "Abdul Yasin",
-            email: "abdul@example.com",
-            product: "Premium T-Shirt",
-            amount: "₹999",
-            status: "Completed",
-        },
-        {
-            id: "#ORD-1023",
-            customer: "Rahul Sharma",
-            email: "rahul@example.com",
-            product: "Air Runner Shoes",
-            amount: "₹2,499",
-            status: "Pending",
-        },
-        {
-            id: "#ORD-1022",
-            customer: "Aman Khan",
-            email: "aman@example.com",
-            product: "Luxury Perfume",
-            amount: "₹1,799",
-            status: "Processing",
-        },
-        {
-            id: "#ORD-1021",
-            customer: "Priya Singh",
-            email: "priya@example.com",
-            product: "Leather Bag",
-            amount: "₹2,199",
-            status: "Completed",
-        },
-        {
-            id: "#ORD-1020",
-            customer: "Rohit Kumar",
-            email: "rohit@example.com",
-            product: "Classic Hoodie",
-            amount: "₹1,499",
-            status: "Cancelled",
-        },
-    ];
+            setProducts((previousProducts) =>
+                previousProducts.filter(
+                    (item) => item._id !== product._id
+                )
+            );
+        } catch (error) {
+            console.error(
+                "Delete product error:",
+                error.response?.data || error.message
+            );
 
-    // =========================
-    // STATUS STYLE
-    // =========================
-
-    const getStatusStyle = (status) => {
-
-        switch (status) {
-
-            case "Completed":
-                return "bg-emerald-50 text-emerald-600";
-
-            case "Pending":
-                return "bg-yellow-50 text-yellow-600";
-
-            case "Processing":
-                return "bg-blue-50 text-blue-600";
-
-            case "Cancelled":
-                return "bg-red-50 text-red-600";
-
-            case "Active":
-                return "bg-emerald-50 text-emerald-600";
-
-            case "Low Stock":
-                return "bg-yellow-50 text-yellow-600";
-
-            case "Out of Stock":
-                return "bg-red-50 text-red-600";
-
-            default:
-                return "bg-gray-50 text-gray-600";
+            setProductActionError(
+                error.response?.data?.message ||
+                    `Could not delete ${
+                        product.productname || "the product"
+                    }.`
+            );
+        } finally {
+            setDeletingProductId(null);
         }
     };
 
+    const safeProducts = Array.isArray(products) ? products : [];
+
     return (
-
         <div className="min-h-screen bg-[#f8f9fb] text-gray-900">
-
-            {/* =========================
-                SIDEBAR
-            ========================= */}
-
+           
             <AdminSideBar />
 
-            {/* =========================
-                MAIN AREA
-            ========================= */}
-
-            <main className="lg:ml-64 min-h-screen">
-
-                {/* =========================
-                    NAVBAR
-                ========================= */}
-
+          
+            <main className="min-h-screen lg:ml-64">
+              
                 <AdminNavbar />
 
-                {/* =========================
-                    DASHBOARD CONTENT
-                ========================= */}
-
-                <div className="p-4 sm:p-6 lg:p-8">
-
-                    {/* =========================
-                        HEADER
-                    ========================= */}
-
-                    <div className="p-6 flex items-center justify-between bg-red-400 rounded-2xl">
-
+                <div className="space-y-8 p-4 sm:p-6 lg:p-8">
+                 
+                    <section className="flex flex-col justify-between gap-5 rounded-2xl bg-gradient-to-r from-rose-200 via-rose-100 to-orange-100 p-6 sm:flex-row sm:items-center sm:p-8">
                         <div>
-
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm font-medium text-rose-800">
                                 Inventory
                             </p>
 
-                            <h3 className="text-xl font-black mt-1">
+                            <h1 className="mt-1 text-2xl font-black text-gray-900 sm:text-3xl">
                                 Products
-                            </h3>
+                            </h1>
 
+                            <p className="mt-2 text-sm text-gray-600">
+                                Manage your store inventory and monitor
+                                orders.
+                            </p>
                         </div>
 
                         <button
                             type="button"
-                            onClick={() =>
-                                navigate("/add-product")
-                            }
-                            className="
-                                px-4
-                                py-2.5
-                                rounded-xl
-                                bg-gradient-to-r
-                                from-rose-500
-                                to-orange-400
-                                text-white
-                                text-sm
-                                font-bold
-                                flex
-                                items-center
-                                gap-2
-                                shadow-lg
-                                shadow-rose-100
-                                hover:shadow-xl
-                                transition
-                            "
+                            onClick={() => navigate("/add-product")}
+                            className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-gradient-to-r from-rose-500 to-orange-400 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-rose-100 transition hover:-translate-y-0.5 hover:shadow-xl sm:self-center"
                         >
-                            <FiPlus />
+                            <FiPlus className="text-lg" />
                             Add Product
                         </button>
+                    </section>
 
-                    </div>
-
-                    {/* =========================
-                        STATS
-                    ========================= */}
-
-                    <section className="mt-6">
+                    
+                    <section>
                         <Card />
                     </section>
 
-                    {/* =========================
-                        REVENUE ANALYTICS
-                    ========================= */}
-
-                    <section className="mt-6">
-
-                        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-
-                            <div className="flex items-center justify-between">
-
-                                <div>
-
-                                    <p className="text-sm text-gray-400">
-                                        Overview
-                                    </p>
-
-                                    <h3 className="text-xl font-black mt-1">
-                                        Revenue Analytics
-                                    </h3>
-
-                                </div>
-
-                                <select
-                                    className="
-                                        px-3
-                                        py-2
-                                        bg-gray-50
-                                        border
-                                        border-gray-100
-                                        rounded-lg
-                                        text-sm
-                                        outline-none
-                                    "
-                                >
-                                    <option>
-                                        Last 7 Days
-                                    </option>
-
-                                    <option>
-                                        Last 30 Days
-                                    </option>
-
-                                    <option>
-                                        Last 3 Months
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                            {/* Chart */}
-
-                            <div className="mt-8 h-56 flex items-end gap-3 sm:gap-5">
-
-                                {
-                                    [
-                                        45,
-                                        62,
-                                        50,
-                                        78,
-                                        58,
-                                        85,
-                                        72,
-                                        95,
-                                        68,
-                                        88,
-                                        76,
-                                        100
-                                    ].map(
-                                        (height, index) => (
-
-                                            <div
-                                                key={index}
-                                                className="
-                                                    flex-1
-                                                    h-full
-                                                    flex
-                                                    items-end
-                                                "
-                                            >
-
-                                                <div
-                                                    className="
-                                                        w-full
-                                                        bg-gradient-to-t
-                                                        from-rose-500
-                                                        to-orange-300
-                                                        rounded-t-lg
-                                                        hover:from-rose-600
-                                                        hover:to-orange-400
-                                                        transition
-                                                    "
-                                                    style={{
-                                                        height: `${height}%`,
-                                                    }}
-                                                />
-
-                                            </div>
-
-                                        )
-                                    )
-                                }
-
-                            </div>
-
-                            {/* Days */}
-
-                            <div className="
-                                flex
-                                justify-between
-                                text-xs
-                                text-gray-400
-                                mt-3
-                            ">
-
-                                <span>Mon</span>
-                                <span>Tue</span>
-                                <span>Wed</span>
-                                <span>Thu</span>
-                                <span>Fri</span>
-                                <span>Sat</span>
-                                <span>Sun</span>
-
-                            </div>
-
-                        </div>
-
+                   
+                    <section>
+                        <RevenueAnalytics />
                     </section>
 
-                    {/* =========================
-                        RECENT ORDERS
-                    ========================= */}
-
-                    <section className="
-                        mt-6
-                        bg-white
-                        rounded-2xl
-                        border
-                        border-gray-100
-                        overflow-hidden
-                    ">
-
-                        {/* Header */}
-
-                        <div className="
-                            p-6
-                            flex
-                            items-center
-                            justify-between
-                        ">
-
-                            <div>
-
-                                <p className="text-sm text-gray-400">
-                                    Store Activity
-                                </p>
-
-                                <h3 className="
-                                    text-xl
-                                    font-black
-                                    mt-1
-                                ">
-                                    Recent Orders
-                                </h3>
-
-                            </div>
-
-                            <button
-                                type="button"
-                                className="
-                                    text-sm
-                                    font-bold
-                                    text-rose-500
-                                    hover:text-rose-600
-                                "
-                            >
-                                View All
-                            </button>
-
-                        </div>
-
-                        {/* Desktop */}
-
-                        <div className="hidden md:block overflow-x-auto">
-
-                            <table className="w-full">
-
-                                <thead className="
-                                    bg-gray-50
-                                    border-y
-                                    border-gray-100
-                                ">
-
-                                    <tr className="
-                                        text-left
-                                        text-xs
-                                        uppercase
-                                        tracking-wider
-                                        text-gray-400
-                                    ">
-
-                                        <th className="px-6 py-4 font-semibold">
-                                            Order
-                                        </th>
-
-                                        <th className="px-6 py-4 font-semibold">
-                                            Customer
-                                        </th>
-
-                                        <th className="px-6 py-4 font-semibold">
-                                            Product
-                                        </th>
-
-                                        <th className="px-6 py-4 font-semibold">
-                                            Amount
-                                        </th>
-
-                                        <th className="px-6 py-4 font-semibold">
-                                            Status
-                                        </th>
-
-                                        <th className="px-6 py-4 font-semibold">
-                                            Action
-                                        </th>
-
-                                    </tr>
-
-                                </thead>
-
-                                <tbody className="divide-y divide-gray-100">
-
-                                    {
-                                        recentOrders.map(
-                                            (order) => (
-
-                                                <tr
-                                                    key={order.id}
-                                                    className="
-                                                        hover:bg-gray-50/70
-                                                        transition
-                                                    "
-                                                >
-
-                                                    <td className="px-6 py-5">
-
-                                                        <p className="font-bold text-sm">
-                                                            {order.id}
-                                                        </p>
-
-                                                    </td>
-
-                                                    <td className="px-6 py-5">
-
-                                                        <p className="font-semibold text-sm">
-                                                            {order.customer}
-                                                        </p>
-
-                                                        <p className="
-                                                            text-xs
-                                                            text-gray-400
-                                                            mt-1
-                                                        ">
-                                                            {order.email}
-                                                        </p>
-
-                                                    </td>
-
-                                                    <td className="px-6 py-5">
-
-                                                        <div className="
-                                                            flex
-                                                            items-center
-                                                            gap-3
-                                                        ">
-
-                                                            <div className="
-                                                                w-10
-                                                                h-10
-                                                                rounded-lg
-                                                                bg-gradient-to-br
-                                                                from-rose-50
-                                                                to-orange-50
-                                                                flex
-                                                                items-center
-                                                                justify-center
-                                                                text-rose-400
-                                                            ">
-                                                                <FiPackage />
-                                                            </div>
-
-                                                            <span className="
-                                                                text-sm
-                                                                font-medium
-                                                            ">
-                                                                {order.product}
-                                                            </span>
-
-                                                        </div>
-
-                                                    </td>
-
-                                                    <td className="px-6 py-5">
-
-                                                        <span className="
-                                                            font-bold
-                                                            text-sm
-                                                        ">
-                                                            {order.amount}
-                                                        </span>
-
-                                                    </td>
-
-                                                    <td className="px-6 py-5">
-
-                                                        <span
-                                                            className={`
-                                                                inline-flex
-                                                                items-center
-                                                                px-3
-                                                                py-1.5
-                                                                rounded-full
-                                                                text-xs
-                                                                font-bold
-                                                                ${getStatusStyle(
-                                                                    order.status
-                                                                )}
-                                                            `}
-                                                        >
-                                                            {order.status}
-                                                        </span>
-
-                                                    </td>
-
-                                                    <td className="px-6 py-5">
-
-                                                        <button
-                                                            type="button"
-                                                            className="
-                                                                w-9
-                                                                h-9
-                                                                rounded-lg
-                                                                bg-gray-50
-                                                                hover:bg-rose-50
-                                                                hover:text-rose-500
-                                                                flex
-                                                                items-center
-                                                                justify-center
-                                                                transition
-                                                            "
-                                                        >
-                                                            <FiMoreVertical />
-                                                        </button>
-
-                                                    </td>
-
-                                                </tr>
-
-                                            )
-                                        )
-                                    }
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                        {/* Mobile */}
-
-                        <div className="
-                            md:hidden
-                            divide-y
-                            divide-gray-100
-                        ">
-
-                            {
-                                recentOrders.map(
-                                    (order) => (
-
-                                        <div
-                                            key={order.id}
-                                            className="p-5"
-                                        >
-
-                                            <div className="
-                                                flex
-                                                items-start
-                                                justify-between
-                                            ">
-
-                                                <div>
-
-                                                    <p className="font-bold text-sm">
-                                                        {order.id}
-                                                    </p>
-
-                                                    <p className="
-                                                        text-sm
-                                                        text-gray-500
-                                                        mt-1
-                                                    ">
-                                                        {order.customer}
-                                                    </p>
-
-                                                </div>
-
-                                                <span
-                                                    className={`
-                                                        px-2.5
-                                                        py-1
-                                                        rounded-full
-                                                        text-xs
-                                                        font-bold
-                                                        ${getStatusStyle(
-                                                            order.status
-                                                        )}
-                                                    `}
-                                                >
-                                                    {order.status}
-                                                </span>
-
-                                            </div>
-
-                                            <div className="
-                                                flex
-                                                items-center
-                                                justify-between
-                                                mt-4
-                                            ">
-
-                                                <p className="
-                                                    text-sm
-                                                    text-gray-500
-                                                ">
-                                                    {order.product}
-                                                </p>
-
-                                                <p className="font-bold">
-                                                    {order.amount}
-                                                </p>
-
-                                            </div>
-
-                                        </div>
-
-                                    )
-                                )
-                            }
-
-                        </div>
-
+                    
+                    <section>
+                        <RecentOrders />
                     </section>
 
-                    {/* =========================
-                        PRODUCTS
-                    ========================= */}
-
-                    <section className="
-                        mt-6
-                        bg-white
-                        rounded-2xl
-                        border
-                        border-gray-100
-                        overflow-hidden
-                    ">
-
-                        {/* Product Header */}
-
-                        <div className="
-                            p-6
-                            flex
-                            items-center
-                            justify-between
-                        ">
-
+                    
+                    <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                       
+                        <div className="flex flex-col justify-between gap-4 p-6 sm:flex-row sm:items-center">
                             <div>
-
                                 <p className="text-sm text-gray-400">
                                     Inventory
                                 </p>
 
-                                <h3 className="
-                                    text-xl
-                                    font-black
-                                    mt-1
-                                ">
+                                <h2 className="mt-1 text-xl font-black text-gray-900 sm:text-2xl">
                                     All Products
-                                </h3>
+                                </h2>
 
+                                <p className="mt-1 text-sm text-gray-400">
+                                    {formatCount(safeProducts.length)}{" "}
+                                    products in your inventory
+                                </p>
                             </div>
 
                             <button
@@ -746,591 +262,361 @@ const AdminHomePage = () => {
                                 onClick={() =>
                                     navigate("/all-Product")
                                 }
-                                className="
-                                    text-sm
-                                    font-bold
-                                    text-rose-500
-                                    hover:text-rose-600
-                                "
+                                className="self-start text-sm font-bold text-rose-500 transition hover:text-rose-600 sm:self-center"
                             >
-                                View All
+                                View All Products
                             </button>
-
                         </div>
 
-                        {/* Product Table */}
+                       
+                        {productActionError && (
+                            <div className="mx-6 mb-4 flex flex-col gap-3 rounded-xl border border-red-100 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-sm text-red-600">
+                                    {productActionError}
+                                </p>
 
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setProductActionError("")
+                                    }
+                                    className="self-start text-sm font-semibold text-red-700 underline"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        )}
+
+                     
                         <div className="overflow-x-auto">
-
-                            <table className="w-full min-w-[1000px]">
-
-                                <thead className="
-                                    bg-gray-50
-                                    border-y
-                                    border-gray-100
-                                ">
-
-                                    <tr className="
-                                        text-left
-                                        text-xs
-                                        uppercase
-                                        tracking-wider
-                                        text-gray-400
-                                    ">
-
-                                        <th className="
-                                            px-6
-                                            py-4
-                                            font-semibold
-                                        ">
+                            <table className="w-full min-w-[900px] border-collapse">
+                                <thead className="border-y border-gray-100 bg-gray-50">
+                                    <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                                        <th className="px-6 py-4">
                                             Product
                                         </th>
 
-                                        <th className="
-                                            px-6
-                                            py-4
-                                            font-semibold
-                                        ">
+                                        <th className="px-6 py-4">
                                             Category
                                         </th>
 
-                                        <th className="
-                                            px-6
-                                            py-4
-                                            font-semibold
-                                        ">
+                                        <th className="px-6 py-4">
                                             Price
                                         </th>
 
-                                        <th className="
-                                            px-6
-                                            py-4
-                                            font-semibold
-                                        ">
+                                        <th className="px-6 py-4">
                                             Stock
                                         </th>
 
-                                        <th className="
-                                            px-6
-                                            py-4
-                                            font-semibold
-                                        ">
+                                        <th className="px-6 py-4">
                                             Status
                                         </th>
 
-                                        <th className="
-                                            px-6
-                                            py-4
-                                            font-semibold
-                                        ">
+                                        <th className="px-6 py-4">
                                             Actions
                                         </th>
-
                                     </tr>
-
                                 </thead>
 
-                                <tbody className="
-                                    divide-y
-                                    divide-gray-100
-                                ">
+                                <tbody className="divide-y divide-gray-100">
+                                    {safeProducts.length > 0 ? (
+                                        safeProducts.map((product) => {
+                                            const status =
+                                                getStockStatus(product);
 
-                                    {
-                                        products.length > 0 ? (
+                                            const imageUrl =
+                                                getProductImageUrl(
+                                                    product.images?.[0]
+                                                );
 
-                                            products.map(
-                                                (product) => {
+                                            const quantity = Number(
+                                                product.quantity ?? 0
+                                            );
 
-                                                    const status =
-                                                        getStockStatus({
-                                                            quantity:
-                                                                product.quantity,
-                                                            lowStockThreshold:
-                                                                product.lowStockThreshold,
-                                                        });
-
-                                                    return (
-
-                                                        <tr
-                                                            key={
-                                                                product._id
-                                                            }
-                                                            className="
-                                                                hover:bg-gray-50/70
-                                                                transition
-                                                            "
-                                                        >
-
-                                                            {/* Product */}
-
-                                                            <td className="
-                                                                px-6
-                                                                py-5
-                                                            ">
-
-                                                                <div className="
-                                                                    flex
-                                                                    items-center
-                                                                    gap-3
-                                                                ">
-
-                                                                    <div className="
-                                                                        w-12
-                                                                        h-12
-                                                                        rounded-xl
-                                                                        bg-gradient-to-br
-                                                                        from-rose-50
-                                                                        to-orange-50
-                                                                        flex
-                                                                        items-center
-                                                                        justify-center
-                                                                        text-rose-400
-                                                                        overflow-hidden
-                                                                        shrink-0
-                                                                    ">
-
-                                                                        {
-                                                                            product
-                                                                                .images
-                                                                                ?.[
-                                                                                0
-                                                                            ] ? (
-
-                                                                                <img
-                                                                                    src={`http://localhost:5000/${product.images[0].replace(
-                                                                                        /^\/+/,
-                                                                                        ""
-                                                                                    )}`}
-                                                                                    alt={
-                                                                                        product.productname
-                                                                                    }
-                                                                                    className="
-                                                                                        w-full
-                                                                                        h-full
-                                                                                        object-cover
-                                                                                    "
-                                                                                />
-
-                                                                            ) : (
-
-                                                                                <FiShoppingBag className="text-xl" />
-
-                                                                            )
-                                                                        }
-
-                                                                    </div>
-
-                                                                    <div>
-
-                                                                        <p className="
-                                                                            font-bold
-                                                                            text-sm
-                                                                        ">
-                                                                            {
-                                                                                product.productname
-                                                                            }
-                                                                        </p>
-
-                                                                        <p className="
-                                                                            text-xs
-                                                                            text-gray-400
-                                                                            mt-1
-                                                                        ">
-                                                                            SKU:{" "}
-                                                                            {
-                                                                                product.sku
-                                                                            }
-                                                                        </p>
-
-                                                                    </div>
-
-                                                                </div>
-
-                                                            </td>
-
-                                                            {/* Category */}
-
-                                                            <td className="
-                                                                px-6
-                                                                py-5
-                                                            ">
-
-                                                                <span className="
-                                                                    text-sm
-                                                                    text-gray-500
-                                                                ">
-                                                                    {
-                                                                        product.category
-                                                                    }
-                                                                </span>
-
-                                                            </td>
-
-                                                            {/* Price */}
-
-                                                            <td className="
-                                                                px-6
-                                                                py-5
-                                                            ">
-
-                                                                <span className="
-                                                                    font-bold
-                                                                    text-sm
-                                                                ">
-                                                                    ₹
-                                                                    {
-                                                                        Number(
-                                                                            product.price
-                                                                        ).toLocaleString(
-                                                                            "en-IN"
-                                                                        )
-                                                                    }
-                                                                </span>
-
-                                                            </td>
-
-                                                            {/* Stock */}
-
-                                                            <td className="
-                                                                px-6
-                                                                py-5
-                                                            ">
-
-                                                                <span
-                                                                    className={`
-                                                                        text-sm
-                                                                        font-semibold
-                                                                        ${
-                                                                            product.quantity ===
-                                                                            0
-                                                                                ? "text-red-500"
-                                                                                : product.quantity <=
-                                                                                  product.lowStockThreshold
-                                                                                ? "text-yellow-500"
-                                                                                : "text-gray-600"
-                                                                        }
-                                                                    `}
-                                                                >
-                                                                    {
-                                                                        product.quantity
-                                                                    }{" "}
-                                                                    units
-                                                                </span>
-
-                                                            </td>
-
-                                                            {/* Status */}
-
-                                                            <td className="
-                                                                px-6
-                                                                py-5
-                                                            ">
-
-                                                                <span
-                                                                    className={`
-                                                                        inline-flex
-                                                                        px-3
-                                                                        py-1.5
-                                                                        rounded-full
-                                                                        text-xs
-                                                                        font-bold
-                                                                        ${status.className}
-                                                                    `}
-                                                                >
-                                                                    {
-                                                                        status.text
-                                                                    }
-                                                                </span>
-
-                                                            </td>
-
-                                                            {/* Actions */}
-
-                                                            <td className="
-                                                                px-6
-                                                                py-5
-                                                            ">
-
-                                                                <div className="
-                                                                    flex
-                                                                    items-center
-                                                                    gap-2
-                                                                ">
-
-                                                                    {/* View */}
-
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() =>
-                                                                            navigate(
-                                                                                "/all-Product"
-                                                                            )
-                                                                        }
-                                                                        className="
-                                                                            w-9
-                                                                            h-9
-                                                                            rounded-lg
-                                                                            bg-gray-50
-                                                                            hover:bg-blue-50
-                                                                            hover:text-blue-500
-                                                                            flex
-                                                                            items-center
-                                                                            justify-center
-                                                                            transition
-                                                                        "
-                                                                    >
-                                                                        <FiEye />
-                                                                    </button>
-
-                                                                    {/* Edit */}
-
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() =>
-                                                                            navigate(
-                                                                                "/all-Product"
-                                                                            )
-                                                                        }
-                                                                        className="
-                                                                            w-9
-                                                                            h-9
-                                                                            rounded-lg
-                                                                            bg-gray-50
-                                                                            hover:bg-rose-50
-                                                                            hover:text-rose-500
-                                                                            flex
-                                                                            items-center
-                                                                            justify-center
-                                                                            transition
-                                                                        "
-                                                                    >
-                                                                        <FiEdit2 />
-                                                                    </button>
-
-                                                                    {/* Delete */}
-
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() =>
-                                                                            deleteProduct(
-                                                                                product._id
-                                                                            )
-                                                                        }
-                                                                        className="
-                                                                            w-9
-                                                                            h-9
-                                                                            rounded-lg
-                                                                            bg-gray-50
-                                                                            hover:bg-red-50
-                                                                            hover:text-red-500
-                                                                            flex
-                                                                            items-center
-                                                                            justify-center
-                                                                            transition
-                                                                        "
-                                                                    >
-                                                                        <FiTrash2 />
-                                                                    </button>
-
-                                                                </div>
-
-                                                            </td>
-
-                                                        </tr>
-
-                                                    );
-                                                }
-                                            )
-
-                                        ) : (
-
-                                            <tr>
-
-                                                <td
-                                                    colSpan="6"
-                                                    className="
-                                                        px-6
-                                                        py-12
-                                                        text-center
-                                                        text-sm
-                                                        text-gray-400
-                                                    "
+                                            return (
+                                                <tr
+                                                    key={product._id}
+                                                    className="transition hover:bg-gray-50/70"
                                                 >
+                                                    {/* Product */}
+                                                    <td className="px-6 py-5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-rose-50 to-orange-50 text-rose-400">
+                                                                {imageUrl ? (
+                                                                    <img
+                                                                        src={
+                                                                            imageUrl
+                                                                        }
+                                                                        alt={
+                                                                            product.productname ||
+                                                                            "Product"
+                                                                        }
+                                                                        loading="lazy"
+                                                                        className="h-full w-full object-cover"
+                                                                        onError={(
+                                                                            event
+                                                                        ) => {
+                                                                            event.currentTarget.style.display =
+                                                                                "none";
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <FiShoppingBag className="text-xl" />
+                                                                )}
+                                                            </div>
+
+                                                            <div className="min-w-0">
+                                                                <p className="max-w-[260px] truncate text-sm font-bold text-gray-900">
+                                                                    {product.productname ||
+                                                                        "Unnamed product"}
+                                                                </p>
+
+                                                                <p className="mt-1 text-xs text-gray-400">
+                                                                    SKU:{" "}
+                                                                    {product.sku ||
+                                                                        "—"}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    
+                                                    <td className="px-6 py-5 text-sm text-gray-500">
+                                                        {product.category ||
+                                                            "—"}
+                                                    </td>
+
+                                                   
+                                                    <td className="whitespace-nowrap px-6 py-5 text-sm font-bold text-gray-900">
+                                                        ₹
+                                                        {Number(
+                                                            product.price || 0
+                                                        ).toLocaleString(
+                                                            "en-IN"
+                                                        )}
+                                                    </td>
+
+                                                    {/* Stock */}
+                                                    <td className="whitespace-nowrap px-6 py-5">
+                                                        <span
+                                                            className={`text-sm font-semibold ${
+                                                                quantity <= 0
+                                                                    ? "text-red-500"
+                                                                    : quantity <=
+                                                                        Number(
+                                                                            product.lowStockThreshold ??
+                                                                                5
+                                                                        )
+                                                                      ? "text-yellow-600"
+                                                                      : "text-gray-600"
+                                                            }`}
+                                                        >
+                                                            {formatCount(
+                                                                quantity
+                                                            )}{" "}
+                                                            units
+                                                        </span>
+                                                    </td>
+
+                                                    
+                                                    <td className="px-6 py-5">
+                                                        <span
+                                                            className={`inline-flex whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold ${status.className}`}
+                                                        >
+                                                            {status.text}
+                                                        </span>
+                                                    </td>
+
+                                                   
+                                                    <td className="px-6 py-5">
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                title="View products"
+                                                                aria-label={`View ${
+                                                                    product.productname ||
+                                                                    "product"
+                                                                }`}
+                                                                onClick={() =>
+                                                                    navigate(
+                                                                        "/all-Product"
+                                                                    )
+                                                                }
+                                                                className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 transition hover:bg-blue-50 hover:text-blue-500"
+                                                            >
+                                                                <FiEye />
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                title="Edit product"
+                                                                aria-label={`Edit ${
+                                                                    product.productname ||
+                                                                    "product"
+                                                                }`}
+                                                                onClick={() =>
+                                                                    navigate(
+                                                                        `/edit-product/${product._id}`
+                                                                    )
+                                                                }
+                                                                className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 transition hover:bg-rose-50 hover:text-rose-500"
+                                                            >
+                                                                <FiEdit2 />
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                title="Delete product"
+                                                                aria-label={`Delete ${
+                                                                    product.productname ||
+                                                                    "product"
+                                                                }`}
+                                                                disabled={
+                                                                    deletingProductId ===
+                                                                    product._id
+                                                                }
+                                                                onClick={() =>
+                                                                    deleteProduct(
+                                                                        product
+                                                                    )
+                                                                }
+                                                                className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                {deletingProductId ===
+                                                                product._id ? (
+                                                                    <FiRefreshCw className="animate-spin" />
+                                                                ) : (
+                                                                    <FiTrash2 />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={6}
+                                                className="px-6 py-14 text-center"
+                                            >
+                                                <FiShoppingBag className="mx-auto mb-3 text-3xl text-gray-300" />
+
+                                                <p className="font-semibold text-gray-700">
                                                     No products found
-                                                </td>
+                                                </p>
 
-                                            </tr>
-
-                                        )
-                                    }
-
+                                                <p className="mt-1 text-sm text-gray-400">
+                                                    Add a product to see it
+                                                    in your inventory.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
-
                             </table>
-
                         </div>
-
                     </section>
 
-                    {/* =========================
-                        BOTTOM INFO
-                    ========================= */}
-
-                    <section className="
-                        grid
-                        sm:grid-cols-3
-                        gap-5
-                        mt-6
-                        mb-8
-                    ">
-
-                        {/* Pending Delivery */}
-
-                        <div className="
-                            bg-white
-                            border
-                            border-gray-100
-                            rounded-2xl
-                            p-5
-                            flex
-                            items-center
-                            gap-4
-                        ">
-
-                            <div className="
-                                w-12
-                                h-12
-                                rounded-xl
-                                bg-blue-50
-                                text-blue-500
-                                flex
-                                items-center
-                                justify-center
-                            ">
-                                <FiTruck />
+                    
+                    <section className="grid grid-cols-1 gap-5 pb-8 sm:grid-cols-3">
+                       
+                        <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 transition hover:shadow-md">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+                                <FiTruck className="text-xl" />
                             </div>
 
                             <div>
-
-                                <p className="
-                                    text-xs
-                                    text-gray-400
-                                ">
+                                <p className="text-xs font-medium text-gray-400">
                                     Pending Delivery
                                 </p>
 
-                                <p className="
-                                    text-xl
-                                    font-black
-                                    mt-1
-                                ">
-                                    24
+                                <p className="mt-1 text-xl font-black text-gray-900">
+                                    {statsLoading
+                                        ? "—"
+                                        : formatCount(
+                                              dashboardStats.pendingDelivery
+                                          )}
                                 </p>
 
+                                <p className="mt-1 text-xs text-gray-400">
+                                    Shipped, not yet delivered
+                                </p>
                             </div>
-
                         </div>
 
-                        {/* Pending Orders */}
-
-                        <div className="
-                            bg-white
-                            border
-                            border-gray-100
-                            rounded-2xl
-                            p-5
-                            flex
-                            items-center
-                            gap-4
-                        ">
-
-                            <div className="
-                                w-12
-                                h-12
-                                rounded-xl
-                                bg-yellow-50
-                                text-yellow-500
-                                flex
-                                items-center
-                                justify-center
-                            ">
-                                <FiClock />
+                       
+                        <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 transition hover:shadow-md">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-yellow-500">
+                                <FiClock className="text-xl" />
                             </div>
 
                             <div>
-
-                                <p className="
-                                    text-xs
-                                    text-gray-400
-                                ">
+                                <p className="text-xs font-medium text-gray-400">
                                     Pending Orders
                                 </p>
 
-                                <p className="
-                                    text-xl
-                                    font-black
-                                    mt-1
-                                ">
-                                    18
+                                <p className="mt-1 text-xl font-black text-gray-900">
+                                    {statsLoading
+                                        ? "—"
+                                        : formatCount(
+                                              dashboardStats.pendingOrders
+                                          )}
                                 </p>
 
+                                <p className="mt-1 text-xs text-gray-400">
+                                    Placed or processing
+                                </p>
                             </div>
-
                         </div>
 
-                        {/* Completed Orders */}
-
-                        <div className="
-                            bg-white
-                            border
-                            border-gray-100
-                            rounded-2xl
-                            p-5
-                            flex
-                            items-center
-                            gap-4
-                        ">
-
-                            <div className="
-                                w-12
-                                h-12
-                                rounded-xl
-                                bg-emerald-50
-                                text-emerald-500
-                                flex
-                                items-center
-                                justify-center
-                            ">
-                                <FiCheckCircle />
+                      
+                        <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 transition hover:shadow-md">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
+                                <FiCheckCircle className="text-xl" />
                             </div>
 
                             <div>
-
-                                <p className="
-                                    text-xs
-                                    text-gray-400
-                                ">
+                                <p className="text-xs font-medium text-gray-400">
                                     Completed Orders
                                 </p>
 
-                                <p className="
-                                    text-xl
-                                    font-black
-                                    mt-1
-                                ">
-                                    1,206
+                                <p className="mt-1 text-xl font-black text-gray-900">
+                                    {statsLoading
+                                        ? "—"
+                                        : formatCount(
+                                              dashboardStats.completedOrders
+                                          )}
                                 </p>
 
+                                <p className="mt-1 text-xs text-gray-400">
+                                    Successfully delivered
+                                </p>
                             </div>
-
                         </div>
-
                     </section>
 
+                    
+                    {statsError && (
+                        <div className="-mt-4 mb-8 flex flex-col gap-3 rounded-xl border border-red-100 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm text-red-600">
+                                {statsError}
+                            </p>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setStatsRefreshKey((key) => key + 1)
+                                }
+                                className="inline-flex items-center gap-2 self-start rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+                            >
+                                <FiRefreshCw />
+                                Retry
+                            </button>
+                        </div>
+                    )}
                 </div>
-
             </main>
-
         </div>
     );
 };

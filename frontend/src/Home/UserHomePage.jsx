@@ -47,14 +47,10 @@ const UserHomePage = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] text-gray-900">
 
-      {/* =====================================================
-          NAVBAR
-      ====================================================== */}
+      
      <UserNavbar/>
 
-      {/* =====================================================
-          HERO SECTION
-      ====================================================== */}
+     
       <section
         id="home"
         className="relative overflow-hidden bg-gradient-to-br from-rose-50 via-white to-orange-50"
@@ -106,7 +102,7 @@ const UserHomePage = () => {
 
               </div>
 
-              {/* Stats */}
+          
               <div className="flex items-center gap-8 mt-12">
 
                 <div>
@@ -147,7 +143,7 @@ const UserHomePage = () => {
 
             </div>
 
-            {/* Hero Visual */}
+          
             <div className="relative hidden lg:flex items-center justify-center">
 
               <div className="absolute w-[420px] h-[420px] rounded-full bg-gradient-to-br from-rose-200 to-orange-100 blur-2xl opacity-70" />
@@ -182,9 +178,7 @@ const UserHomePage = () => {
 
       </section>
 
-      {/* =====================================================
-          BENEFITS
-      ====================================================== */}
+     
       <section className="bg-white border-y border-gray-100">
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -261,9 +255,7 @@ const UserHomePage = () => {
 
       </section>
 
-      {/* =====================================================
-          CATEGORIES
-      ====================================================== */}
+      
       <section
         id="categories"
         className="py-20 bg-[#fafafa]"
@@ -329,9 +321,7 @@ const UserHomePage = () => {
 
       </section>
 
-      {/* =====================================================
-          PRODUCTS
-      ====================================================== */}
+     
       <section
         id="products"
         className="py-20 bg-white"
@@ -341,9 +331,7 @@ const UserHomePage = () => {
 
       </section>
 
-      {/* =====================================================
-          DEAL BANNER
-      ====================================================== */}
+    
       <section
         id="deals"
         className="py-20 bg-[#fafafa]"
@@ -385,9 +373,7 @@ const UserHomePage = () => {
 
       </section>
 
-      {/* =====================================================
-          FOOTER
-      ====================================================== */}
+      
       <footer className="bg-gray-950 text-white">
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">

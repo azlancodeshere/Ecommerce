@@ -19,7 +19,7 @@ const UserNavbar = () => {
     const { user, isAuthenticated } = useContext(AuthContext);
     const { cartCount, getCart } = useContext(CartContext);
 
-    // Cart count load/update
+  
     useEffect(() => {
         if (isAuthenticated) {
             getCart();
